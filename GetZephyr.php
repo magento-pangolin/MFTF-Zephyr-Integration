@@ -86,7 +86,7 @@ class GetZephyr {
 	public function getIssuesByProject($project) {
         //TODO: Send JQL query and parse results
         //$jql = 'project = '. $project. ' and issueType = Test and status Automated';
-        $jql = 'project = MC AND issueType = Test AND status = Automated AND reporter = treece';
+        //$jql = 'project = MC AND issueType = Test AND status = Automated AND reporter = treece';
         //$jql = 'project = MC AND issueType = Test AND status = Automated';
         $jql = 'project = MAGETWO and issueType = Test';
         $jql = "project = MAGETWO and issuetype = test and 'Automation Status' in (Automated, Skipped)";
