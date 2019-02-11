@@ -188,6 +188,7 @@ public function dryRunREST()
 }
 
 //$finish = ZephyrIntegrationManager::m2Migration();
-$finish =ZephyrIntegrationManager::realRunmc297();
+//$finish =ZephyrIntegrationManager::realRunmc297();
 //$finish = ZephyrIntegrationManager::realScopedToJZIDemo();
-print_r($finish);
+//print_r($finish);
+ZephyrIntegrationManager::runMftfZephyrIntegration($project);
