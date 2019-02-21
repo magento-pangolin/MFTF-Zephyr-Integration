@@ -1,5 +1,5 @@
 {
-    "name": "magento/MFTF-Zephyr-Integration",
+    "name": "magento/mftf-zephyr-integration",
     "description": "MFTF Zephyr Integration",
     "type": "library"
 }
