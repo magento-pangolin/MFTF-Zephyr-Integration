@@ -6,15 +6,10 @@
 
 namespace Magento\JZI;
 
-require_once ('../../autoload.php');
-
 use JiraRestApi\Issue\IssueService;
 use JiraRestApi\Issue\IssueField;
 use JiraRestApi\JiraException;
 use JiraRestApi\Issue\Transition;
-//include_once ('UpdateIssue.php');
-//include_once ('../../lesstif/php-jira-rest-client/src/Issue/Transition.php');
-//include_once ('../../lesstif/php-jira-rest-client/src/Issue/IssueService.php');
 
 /**
  * Class transitionIssue, handles issue transitions in Zephyr
@@ -57,7 +52,7 @@ class transitionIssue
                 $transition->setTransitionName($status);
                 $transition->setCommentBody("MFTF INTEGRATION - Setting " . $status . " status.");
 
-                $skipTransitionIssueService = new IssueService();
+                $skipTransitionIssueService = new IssueService(null, null, realpath('../../../').'/');
 
                 $skipTransitionIssueService->transition($issueKey, $transition);
 //                if ($skipTransitionIssueService->http_response == 204) {
@@ -79,7 +74,7 @@ class transitionIssue
             $transition = new Transition();
             $transition->setTransitionName('Automated');
             $transition->setCommentBody('MFTF INTEGRATION - UNSKIPPING.');
-            $skipTransitionIssueService = new IssueService();
+            $skipTransitionIssueService = new IssueService(null, null, realpath('../../../').'/');
             $skipTransitionIssueService->transition($key, $transition);
             //if ($skipTransitionIssueService->http_response == 204) {
 //                print_r("\n" . "SUCCESS! " . $issueKey . " set to status SKIPPED");

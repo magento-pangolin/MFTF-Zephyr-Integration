@@ -6,13 +6,10 @@
 
 namespace Magento\JZI;
 
-//require 'vendor/autoload.php';
-
 use JiraRestApi\Issue\IssueService;
 use JiraRestApi\Issue\IssueField;
 use JiraRestApi\JiraException;
-
-include_once ('TransitionIssue.php');
+use Magento\JZI\Util\LoggingUtil;
 
 class createIssue
 {
@@ -81,7 +78,7 @@ class createIssue
                 ->addCustomField('customfield_12720', ['value' => $test['severity'][0]])
             ;
 
-            $issueService = new IssueService();
+            $issueService = new IssueService(null, null, realpath('../../../').'/');
 
             $ret = $issueService->create($issueField);
             //$ret = $issueService->createMultiple([$issueFieldOne, $issueFieldTwo]);
@@ -122,7 +119,7 @@ class createIssue
         //$issueField->fixVersions = [['id'=>'18972']]; // TODO versioning
         $issueField->fixVersions = [['name' => '2.3.0']];
 
-        $issueService = new IssueService();
+        $issueService = new IssueService(null, null, realpath('../../../').'/');
         $time_start = microtime(true);
         $ret = $issueService->create($issueField);
         $time_end = microtime(true);
@@ -189,7 +186,7 @@ class createIssue
         //$issueField->fixVersions = [['id'=>'18972']];
         $issueField->fixVersions = [['name' => '2.3.0']];
 
-        $issueService = new IssueService();
+        $issueService = new IssueService(null, null, realpath('../../../').'/');
         $ret = $issueService->create($issueField);
         //LoggingUtil::getInstance()->getLogger(CreateIssue::class)->info("CREATED ISSUE: " . $ret->key);
 
@@ -230,7 +227,7 @@ class createIssue
         //$issueField->fixVersions = [['id'=>'18972']];
         $issueField->fixVersions = [['name' => '2.3.0']];
 
-        $issueService = new IssueService();
+        $issueService = new IssueService(null, null, realpath('../../../').'/');
         //$ret = $issueService->create($issueField);
         LoggingUtil::getInstance()->getLogger(CreateIssue::class)->info
         ("DRY RUN : " . $issueField->summary . " " . $issueField->description);

@@ -6,8 +6,6 @@
 
 namespace Magento\JZI;
 
-//require(__DIR__ . "/../../../../../autoload.php");
-
 use \Magento\FunctionalTestingFramework\Test\Handlers\TestObjectHandler;
 use \Closure;
 

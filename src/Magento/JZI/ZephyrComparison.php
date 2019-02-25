@@ -5,7 +5,8 @@
  */
 
 namespace Magento\JZI;
-include_once ('Util/LoggingUtil.php');
+
+use Magento\JZI\Util\LoggingUtil;
 
 class ZephyrComparison {
 
@@ -32,7 +33,13 @@ class ZephyrComparison {
      * @var array
      */
     public $createArrayByName;
-    
+
+    /**
+     * array of MFTF test which need to be created in Zephyr
+     * @var array
+     */
+    public $createArrayById;
+
     /**
      * array of discrepencies found between MFTF and associated Zephyr test
      * @var array

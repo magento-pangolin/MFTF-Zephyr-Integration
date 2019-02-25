@@ -4,7 +4,7 @@
  * See COPYING.txt for license details.
  */
 
-namespace Magento\JZI;
+namespace Magento\JZI\Util;
 
 use Magento\FunctionalTestingFramework\Config\MftfApplicationConfig;
 use Monolog\Handler\StreamHandler;

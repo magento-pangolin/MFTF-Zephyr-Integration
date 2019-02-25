@@ -13,10 +13,6 @@ use JiraRestApi\JiraException;
 use JiraRestApi\Issue\Transition;
 use JiraRestApi\IssueLink\IssueLink;
 use JiraRestApi\IssueLink\IssueLinkService;
-include_once ('CreateIssue.php');
-include_once ('ZephyrComparison.php');
-include_once ('UpdateIssue.php');
-include_once ('Util/LoggingUtil.php');
 
 /**
  * Class CreateManager, handles all the CREATE requests for new Zephyr tests.

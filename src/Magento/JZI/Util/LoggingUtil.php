@@ -4,12 +4,10 @@
  * See COPYING.txt for license details.
  */
 
-namespace Magento\JZI;
+namespace Magento\JZI\Util;
 
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
-//use Magento\JZI\JZILogger;
-include_once ('JZILogger.php');
 
 class LoggingUtil
 {

@@ -6,9 +6,6 @@
 
 namespace Magento\JZI;
 
-include_once ('UpdateIssue.php');
-include_once ('Util/LoggingUtil.php');
-
 class UpdateManager
 {
     public static $updateManager;

@@ -3,11 +3,7 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-
-//require 'vendor/autoload.php';
 namespace Magento\JZI;
-
-require(__DIR__ . "/../../../vendor/autoload.php");
 
 use JiraRestApi\Issue\IssueService;
 use JiraRestApi\JiraException;
@@ -55,7 +51,7 @@ class GetZephyr {
     function getZephyrById($zephyrID){
         $issue = [];
 		try {
-		    $issueService = new IssueService();
+		    $issueService = new IssueService(null, null, realpath('../../../').'/');
 			
 		    $queryParam = [
 		        'fields' => [  // default: '*all'
@@ -94,7 +90,7 @@ class GetZephyr {
         $zephyrIDs =[];
 
         try {
-            $query = new IssueService();
+            $query = new IssueService(null, null, realpath('../../../').'/');
             $startAt = 0;
             $maxResults = 5;
             $ret1 = $query->search($jql, $startAt, $maxResults);
@@ -153,7 +149,7 @@ class GetZephyr {
      */
     public function jqlPagination($jql) {
         try {
-            $issueService = new IssueService();
+            $issueService = new IssueService(null, null, realpath('../../../').'/');
 
             //$jql = "project = MAGETWO and issuetype = test and 'Automation Status' in (Automated, Skipped)";
 
@@ -207,8 +203,8 @@ class GetZephyr {
      * @return array
      */
     public function getBothProjects() {
-        $jqlMAGETWO = "project = MAGETWO and issuetype = test and 'Automation Status' in (Automated, Skipped)";
-        $jqlMC = "project = MC AND issueType = Test AND status in (Automated, Skipped)";
+        $jqlMAGETWO = "project = MAGETWO AND issuetype = test AND \"Automation Status\" in (Automated, Skipped) AND ID >= MAGETWO-93688 ORDER BY key DESC ";
+        $jqlMC = "project = MC AND issueType = Test AND status in (Automated, Skipped) AND ID >= MC-4500 ORDER BY key DESC";
         $zephyrIdsMAGETWO = $this->jqlPagination($jqlMAGETWO);
         $zephyrIdsMC = $this->jqlPagination($jqlMC);
         $zephyrIds = array_merge($zephyrIdsMAGETWO, $zephyrIdsMC);

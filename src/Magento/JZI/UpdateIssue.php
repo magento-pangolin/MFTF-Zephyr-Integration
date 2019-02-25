@@ -6,17 +6,13 @@
 
 namespace Magento\JZI;
 
-require_once ('../../autoload.php');
-
 use JiraRestApi\Issue\IssueService;
 use JiraRestApi\Issue\IssueField;
 use JiraRestApi\JiraException;
 use JiraRestApi\Issue\Transition;
 use JiraRestApi\IssueLink\IssueLink;
 use JiraRestApi\IssueLink\IssueLinkService;
-
-include_once ('Util/LoggingUtil.php');
-include_once ('TransitionIssue.php');
+use Magento\JZI\Util\LoggingUtil;
 
 /**
  * Class UpdateIssue, builds and sends an update REST call
@@ -57,7 +53,7 @@ class UpdateIssue {
             'notifyUsers' => false,
         ];
 
-        $issueService = new IssueService();
+        $issueService = new IssueService(null, null, realpath('../../../').'/');
 
         // You can set the $paramArray param to disable notifications in example
         $ret = $issueService->update($issueKey, $issueField, $editParams);
@@ -99,7 +95,7 @@ class UpdateIssue {
         }
         rtrim($updateLogString, ',');
         LoggingUtil::getInstance()->getLogger(UpdateIssue::class)->info('TEST sent to UPDATE : ' . $update['key'] . " : " . $updateLogString . "\n");
-        $issueService = new IssueService();
+        $issueService = new IssueService(null, null, realpath('../../../').'/');
 
         // You can set the $paramArray param to disable notifications in example
         $time_start = microtime(true);
@@ -147,7 +143,7 @@ class UpdateIssue {
         $issueField->setProjectKey("MC");
         $issueField->environment = "None";
         $issueField->resolution = "Done";
-        $issueService = new IssueService();
+        $issueService = new IssueService(null, null, realpath('../../../').'/');
 
         // You can set the $paramArray param to disable notifications in example
         $ret = $issueService->update($update['key'], $issueField);
@@ -167,7 +163,7 @@ class UpdateIssue {
             $transition->setTransitionName('Skipped');
             $transition->setCommentBody('MFTF INTEGRATION - Setting SKIPPED status.');
 
-            $skipTransitionIssueService = new IssueService();
+            $skipTransitionIssueService = new IssueService(null, null, realpath('../../../').'/');
 
             $skipTransitionIssueService->transition($issueKey, $transition);
             //if ($skipTransitionIssueService->http_response == 204) {
@@ -232,7 +228,7 @@ class UpdateIssue {
             $transition->setTransitionName('Skipped');
             $transition->setCommentBody('MFTF INTEGRATION - Setting SKIPPED status.');
 
-            $skipTransitionIssueService = new IssueService();
+            $skipTransitionIssueService = new IssueService(null, null, realpath('../../../').'/');
 
             //$skipTransitionIssueService->transition($issueKey, $transition);
             //if ($skipTransitionIssueService->http_response == 204) {
@@ -243,7 +239,7 @@ class UpdateIssue {
         }
     }
 
-    public function dryRunSkipTestLinkIssue($update) {
+    public static function dryRunSkipTestLinkIssue($update) {
         try {
             $il = new IssueLink();
 
@@ -252,7 +248,7 @@ class UpdateIssue {
                 ->setLinkTypeName('Blocks' )
                 ->setComment('Blocking issue for Skipped test');
 
-            $ils = new IssueLinkService();
+            $ils = new IssueLinkService(null, null, realpath('../../../').'/');
 
             //$ret = $ils->addIssueLink($il);
 

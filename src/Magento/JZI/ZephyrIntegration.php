@@ -6,16 +6,6 @@
 
 namespace Magento\JZI;
 
-
-//require(__DIR__ . "/../../../vendor/autoload.php");
-//use Magento\JZI\GetZephyr;
-include_once ('GetZephyr.php');
-include_once ('ParseMFTF.php');
-include_once ('ZephyrComparison.php');
-include_once ('CreateManager.php');
-include_once ('UpdateManager.php');
-//include_once ('CreateIssue.php');
-
 ini_set('memory_limit', '512M');
 
 function debugOutputArrays()
