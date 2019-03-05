@@ -4,7 +4,7 @@
  * See COPYING.txt for license details.
  */
 
-namespace Magento\JZI\Util;
+namespace Magento\MZI\Util;
 
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
@@ -62,11 +62,10 @@ class LoggingUtil
         }
 
         if (!array_key_exists($clazz, $this->loggers)) {
-            $logger = new JZILogger($clazz);
+            $logger = new Logger($clazz);
             $logger->pushHandler(new StreamHandler($this->getLoggingPath($clazz)));
             $this->loggers[$clazz] = $logger;
         }
-
         return $this->loggers[$clazz];
     }
 
@@ -82,9 +81,8 @@ class LoggingUtil
         }
         elseif (($clazz == CreateIssue::class) || ($clazz == CreateManager::class)) {
             return "log/createIssue.log";
-    }
-    else {
-        return "jzi.log";
-    }
+        } else {
+            return "mzi.log";
+        }
     }
 }

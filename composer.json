@@ -9,7 +9,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Magento\\JZI\\": "src/Magento/JZI"
+            "Magento\\MZI\\": "src/Magento/MZI"
         }
     }
 }
