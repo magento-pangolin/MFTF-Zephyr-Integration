@@ -24,6 +24,32 @@ class GetZephyr
     private static $projectComponents = [];
 
     /**
+     * @var GetZephyr
+     */
+    private static $instance;
+
+    /**
+     * GetZephyr constructor
+     */
+    private function __construct()
+    {
+        // private constructor
+    }
+
+    /**
+     * Static singleton getInstance
+     *
+     * @return GetZephyr
+     */
+    public static function getInstance()
+    {
+        if (self::$instance === null) {
+            self::$instance = new GetZephyr();
+        }
+        return self::$instance;
+    }
+
+    /**
      * Gets tests from project key
      * @param string $projectKey
      *
@@ -49,7 +75,7 @@ class GetZephyr
             return self::$projectComponents[$projectKey];
         }
         self::$projectComponents[$projectKey] = [];
-        $projectService = new ProjectService(null, null, realpath('../../../').'/');
+        $projectService = new ProjectService();
         $project = $projectService->get($projectKey);
         foreach ($project->components as $component) {
             if (strpos($component->name, 'Module/') === false) {
@@ -76,18 +102,18 @@ class GetZephyr
     private function jqlPagination($jql)
     {
         try {
-            print ("\nFetching Zephyr tests by jql...\n");
+            print ("\nFetching zephyr tests by jql...\n");
 
             $zephyrIDs = [];
-            $issueService = new IssueService(null, null, realpath('../../../').'/');
-
+            $issueService = new IssueService();
             $startAt = 0;	//the index of the first issue to return (0-based)
             $maxResult = 100;	// the maximum number of issues to return (defaults to 50).
 
             // first fetch
             $totalRet = $issueService->search($jql, $startAt, $maxResult);
             $totalCount = $totalRet->total; // the total number of issues to return
-            print ("Total tests found: $totalCount\n");
+            ZephyrIntegrationManager::$totalZephyr = $totalCount;
+            print ("Total zephyr tests: $totalCount\n");
 
             print ("\nPaging starts at $startAt\n");
             print ("-------------------------------\n");
@@ -111,7 +137,9 @@ class GetZephyr
             print("\nFinished collecting Zephyr Tests\n\n");
         } catch (JiraException $e) {
             print("JIRA Exception: " . $e->getMessage());
-            LoggingUtil::getInstance()->getLogger(UpdateIssue::class)->info("JIRA Exception: " . $e->getMessage());
+            LoggingUtil::getInstance()->getLogger(UpdateIssue::class)->info(
+                "JIRA Exception: " . $e->getMessage()
+            );
         }
         return $zephyrIDs;
     }

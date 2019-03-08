@@ -19,43 +19,49 @@ use JiraRestApi\IssueLink\IssueLinkService;
 class CreateManager
 {
     /**
-     * CreateManager instance.
-     *
      * @var CreateManager
      */
-    public static $createManager;
+    private static $instance;
 
     /**
-     * Get CreateManager instance.
+     * CreateManager constructor
+     */
+    private function __construct()
+    {
+        // private constructor
+    }
+
+    /**
+     * Static singleton getInstance
      *
      * @return CreateManager
      */
     public static function getInstance()
     {
-        if (!self::$createManager) {
-            self::$createManager = new CreateManager();
+        if (self::$instance === null) {
+            self::$instance = new CreateManager();
         }
-
-        return self::$createManager;
+        return self::$instance;
     }
 
     /**
      * Manages passing data to Create operation and skipping test if necessary
      *
      * @param array $toBeCreatedTests
-     * @param string $releaseLine
      * @param bool $isDryRun
      *
      * @return void
      * @throws \Exception
      */
-    public function performCreateOperations(array $toBeCreatedTests, $releaseLine, $isDryRun = true)
+    public function performCreateOperations(array $toBeCreatedTests, $isDryRun = true)
     {
-        foreach ($toBeCreatedTests as $test) {
-            $mftfLoggingDescriptor = ZephyrComparison::mftfLoggingDescriptor($test);
+        foreach ($toBeCreatedTests as $testName => $test) {
+            //$mftfLoggingDescriptor = ZephyrComparison::mftfLoggingDescriptor($test);
             $createIssue = new CreateIssue($test);
-            $response = $createIssue::createIssueREST($test, $releaseLine, $isDryRun);
+            $response = $createIssue->createIssueREST($testName, $test, $isDryRun);
             $createdIssueByName[] = $response;
         }
+        ZephyrIntegrationManager::$totalCreated = count($toBeCreatedTests);
+        print("\n\nTotal created zephyr tests: " . count($toBeCreatedTests) . "\n\n");
     }
 }

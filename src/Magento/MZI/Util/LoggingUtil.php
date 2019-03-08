@@ -8,6 +8,10 @@ namespace Magento\MZI\Util;
 
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
+use Magento\MZI\UpdateIssue;
+use Magento\MZI\CreateIssue;
+use Magento\MZI\UpdateManager;
+use Magento\MZI\CreateManager;
 
 class LoggingUtil
 {
@@ -23,24 +27,24 @@ class LoggingUtil
      *
      * @var LoggingUtil
      */
-    private static $INSTANCE;
+    private static $instance;
 
     /**
-     * Singleton accessor for instance variable
+     * Singleton accessor for LoggingUtil instance
      *
      * @return LoggingUtil
      */
     public static function getInstance()
     {
-        if (self::$INSTANCE == null) {
-            self::$INSTANCE = new LoggingUtil();
+        if (self::$instance == null) {
+            self::$instance = new LoggingUtil();
         }
 
-        return self::$INSTANCE;
+        return self::$instance;
     }
 
     /**
-     * Constructor for Logging Util
+     * Constructor for LoggingUtil
      */
     private function __construct()
     {
@@ -52,7 +56,7 @@ class LoggingUtil
      * existing instance is simply returned.
      *
      * @param string $clazz
-     * @return MftfLogger
+     * @return array
      * @throws \Exception
      */
     public function getLogger($clazz)
@@ -82,7 +86,7 @@ class LoggingUtil
         elseif (($clazz == CreateIssue::class) || ($clazz == CreateManager::class)) {
             return "log/createIssue.log";
         } else {
-            return "mzi.log";
+            return "log/mzi.log";
         }
     }
 }

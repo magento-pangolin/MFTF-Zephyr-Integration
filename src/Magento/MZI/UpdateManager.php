@@ -7,28 +7,44 @@ namespace Magento\MZI;
 
 class UpdateManager
 {
-    public static $updateManager;
+    /**
+     * @var UpdateManager
+     */
+    private static $instance;
 
+    /**
+     * UpdateManager constructor
+     */
+    private function __construct()
+    {
+        // private constructor
+    }
+
+    /**
+     * Static singleton getInstance
+     *
+     * @return UpdateManager
+     */
     public static function getInstance()
     {
-        if (!self::$updateManager) {
-            self::$updateManager = new UpdateManager();
+        if (self::$instance === null) {
+            self::$instance = new UpdateManager();
         }
-
-        return self::$updateManager;
+        return self::$instance;
     }
 
     /**
      * @param array $toBeUpdatedTests
-     * @param string $releaseLine
      * @param bool $isDryRun
      * @throws \Exception
      */
-    public function performUpdateOperations(array $toBeUpdatedTests, $releaseLine, $isDryRun = true)
+    public function performUpdateOperations(array $toBeUpdatedTests, $isDryRun = true)
     {
         foreach ($toBeUpdatedTests as $key => $update) {
             $updateIssue = new UpdateIssue();
-            $updateIssue::updateIssueREST($update, $key, $releaseLine, $isDryRun);
+            $updateIssue->updateIssueREST($update, $key, $isDryRun);
         }
+        ZephyrIntegrationManager::$totalUpdated = count($toBeUpdatedTests);
+        print("\n\nTotal updated zephyr tests: " . count($toBeUpdatedTests) . "\n\n");
     }
 }

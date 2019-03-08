@@ -1,10 +1,10 @@
 # MFTF-Zephyr-Integration
 
-The purpose of this project is to synchronize mftf tests meta data in a release line with corresponding Jira Zephyr records in the same release line.
+The purpose of this project is to synchronize mftf with page builder tests meta data in a release line with corresponding Jira / Zephyr records in the same release line.
 
 ## Installation
 
-* Download and install Magento B2B from a branch (git) or a version (composer)
+* Download and install Magento B2B from a git branch (**Do Not** install **composer** based B2B because it contains additional CBE extensions that will cause unnecessary side effects)
 * Add the following in _require_ section of magento B2B root composer.json
 ```
     "magento/mftf-zephyr-integration": "1.0",
@@ -22,5 +22,5 @@ For example, to synchronize Zephyr project MC from release line 2.3.x, run comma
 
 ```cd <Magento_B2B_Root_Dir>```
 
-```php vendor/magento/mftf-zephyr-integration/src/Magento/MZI/ZephyrIntegrationManager.php MC 2.3.x```
+```php vendor/magento/mftf-zephyr-integration/mzi.php --dryRun=0 --project=MC --releaseLine=2.3.x --pbReleaseLine=PB1.0.x```
 

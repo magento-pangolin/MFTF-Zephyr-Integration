@@ -20,11 +20,21 @@ use Magento\MZI\Util\LoggingUtil;
 class UpdateIssue
 {
     /**
+     * Label for updated issue
+     */
+    const UPDATE_LABEL = 'mzi_updated';
+
+    /**
+     * Note for test update
+     */
+    const NOTE_FOR_UPDATE = "\nUpdated by mftf zephyr integration from test: ";
+
+    /**
      * Updated fields as a concatenated string
      *
      * @var string
      */
-    private static $updatedFields = '';
+    private $updatedFields = '';
 
     /**
      * Builds a REST update from array
@@ -32,16 +42,15 @@ class UpdateIssue
      *
      * @param array $update
      * @param string $key
-     * @param string $releaseLine
      * @param bool $isDryRun
      * @return void
      * @throws \Exception
      */
-    static function updateIssueREST(array $update, $key, $releaseLine, $isDryRun = true)
+    public function updateIssueREST(array $update, $key, $isDryRun = true)
     {
         /** Updated fields:
          *
-         * summary, description, stories, severity, status, label, ? test type, ? release line // TODO
+         * summary, description, stories, severity, status, label, release line, ? test type
          *
          * - add mzi_updated label if it does not exist previously
          * - description + test name
@@ -49,41 +58,42 @@ class UpdateIssue
          */
 
         $update += ['key' => $key];
-        $issueField = self::buildUpdateIssueField($update);
-        //$issueField->setProjectKey("MC");
-        //$issueField->setIssueType("Test");
-        $logMessage = $update['key'] . " with data: \n" . self::$updatedFields;
+        $issueField = $this->buildUpdateIssueField($update);
+        $issueField->setProjectKey("MC");
+        $issueField->setIssueType("Test");
+        $logMessage = $update['key'] . " with data: \n" . $this->updatedFields;
         if (!$isDryRun) {
             try {
-                $issueService = new IssueService(null, null, realpath('../../../').'/');
+                $issueService = new IssueService();
                 $time_start = microtime(true);
-                $issueService->update($update['key'], $issueField);
+                $response = $issueService->update($update['key'], $issueField); // return true on success
                 $time_end = microtime(true);
                 $time = $time_end - $time_start;
                 $logMessage = "UPDATED TEST: " . $logMessage . " Took time:  " . $time . "\n";
             } catch (JiraException $e) {
-                print_r("JIRA Exception: " . $e->getMessage());
-                LoggingUtil::getInstance()->getLogger(UpdateIssue::class)->info("JIRA Exception: " . $e->getMessage());
+                print("JIRA Exception: " . $e->getMessage());
+                LoggingUtil::getInstance()->getLogger(UpdateIssue::class)->info(
+                    "JIRA Exception: " . $e->getMessage()
+                );
             }
         } else {
             $logMessage = "Dry Run... UPDATED TEST: " . $logMessage . "\n";
         }
-        print_r($logMessage);
+        print($logMessage);
         LoggingUtil::getInstance()->getLogger(UpdateIssue::class)->info($logMessage);
 
         // Transition issue status to "Skipped"
+        $transitionExecutor = new TransitionIssue();
         if (isset($update['skip'])) {
-            if (!($update['status'] == "Automated")) {
-                TransitionIssue::statusTransitionToAutomated($update['key'], $update['status']['name'], $isDryRun);
+            if ($update['status'] != "Automated") {
+                $transitionExecutor->statusTransitionToAutomated($update['key'], $update['status'], $isDryRun);
             }
-            TransitionIssue::oneStepStatusTransition($update['key'], "Skipped", $isDryRun);
-            self::skipTestLinkIssue($update, $isDryRun);
+            $transitionExecutor->oneStepStatusTransition($update['key'], "Skipped", $isDryRun);
+            $this->skipTestLinkIssue($update, $isDryRun);
         }
         // Transition issue status to "Automated"
         if (isset($update['unskip'])) {
-            if (!($update['status'] == "Automated")) {
-                TransitionIssue::statusTransitionToAutomated($update['key'], $update['status']['name'], $isDryRun);
-            }
+            $transitionExecutor->oneStepStatusTransition($update['key'], "Automated", $isDryRun);
         }
     }
 
@@ -94,25 +104,50 @@ class UpdateIssue
      * @param array $update
      * @return IssueField
      */
-    public static function buildUpdateIssueField(array $update)
+    private function buildUpdateIssueField(array $update)
     {
-        self::$updatedFields = '';
+        $this->updatedFields = '';
         $issueField = new IssueField();
         if (isset($update['title'])) {
             $issueField->setSummary($update['title']);
-            self::$updatedFields .= "title = " . $update['title'] . "\n";
+            $this->updatedFields .= "title = " . $update['title'] . "\n";
         }
+
         if (isset($update['description'])) {
-            $issueField->setDescription($update['description']);
-            self::$updatedFields .= "description = " . $update['description'] . "\n";
+            $issueField->setDescription(
+                $update['description']
+                . self::NOTE_FOR_UPDATE
+                . $update['mftf_test_name']
+                . "\n"
+            );
+            $this->updatedFields .=
+                "description = "
+                . $update['description']
+                . self::NOTE_FOR_UPDATE
+                . $update['mftf_test_name']
+                . "\n";
         }
+
         if (isset($update['stories']) && !empty($update['stories'])) {
             $issueField->addCustomField('customfield_14364', $update['stories']);
-            self::$updatedFields .= "stories = " . $update['stories'] . "\n";
+            $this->updatedFields .= "stories = " . $update['stories'] . "\n";
         }
+
         if (isset($update['severity'])) {
             $issueField->addCustomField('customfield_12720', ['value' => $update['severity']]);
-            self::$updatedFields .= "severity = " . $update['severity'] . "\n";
+            $this->updatedFields .= "severity = " . $update['severity'] . "\n";
+        }
+
+        if (isset($update['release_line'])) {
+            $issueField->addCustomField('customfield_14121', ['value' => $update['release_line']]);
+            $this->updatedFields .= "release line = " . $update['release_line'] . "\n";
+        }
+
+        foreach ($update['labels'] as $label) {
+            $issueField->addLabel($label);
+        }
+        if (in_array(self::UPDATE_LABEL . ZephyrIntegrationManager::$timestamp, $update['labels']) === false) {
+            $issueField->addLabel(self::UPDATE_LABEL . ZephyrIntegrationManager::$timestamp);
         }
         return $issueField;
     }
@@ -124,7 +159,7 @@ class UpdateIssue
      * @param bool $isDryRun
      * @throws \Exception
      */
-    public static function skipTestLinkIssue(array $update, $isDryRun = true)
+    public function skipTestLinkIssue(array $update, $isDryRun = true)
     {
         try {
             $il = new IssueLink();
@@ -146,12 +181,14 @@ class UpdateIssue
             } else {
                 $logMessage .= "\n";
             }
-            print_r($logMessage);
+            print($logMessage);
             LoggingUtil::getInstance()->getLogger(UpdateIssue::class)->info($logMessage);
 
         } catch (JiraException $e) {
-            print_r("JIRA Exception: " . $e->getMessage());
-            LoggingUtil::getInstance()->getLogger(UpdateIssue::class)->info("JIRA Exception: " . $e->getMessage());
+            print("JIRA Exception: " . $e->getMessage());
+            LoggingUtil::getInstance()->getLogger(UpdateIssue::class)->info(
+                "JIRA Exception: " . $e->getMessage()
+            );
         }
     }
 }

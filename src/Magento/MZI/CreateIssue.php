@@ -9,24 +9,115 @@ use JiraRestApi\Issue\IssueService;
 use JiraRestApi\Issue\IssueField;
 use JiraRestApi\JiraException;
 use Magento\MZI\Util\LoggingUtil;
-use Magento\MZI\GetZephyr;
 
 class CreateIssue
 {
+    /**
+     * Label for created issue
+     */
+    const CREATE_LABEL = 'mzi_created';
+
+    /**
+     * Note for test creation
+     */
+    const NOTE_FOR_CREATE = "\nCreated by mftf zephyr integration from test: ";
+
     /**
      * Test containing all information for issue to be created from MFTF annotations
      *
      * @var array
      */
-    public $test;
+    private $test;
 
     /**
-     * createIssue constructor.
+     * CreateIssue constructor
+     *
      * @param $id
      */
-    function __construct($id)
+    public function __construct($id)
     {
         $this->test = $this->defaultMissingFields($id);
+    }
+
+    /**
+     * Creates an issue in Zephyr from test data
+     * Will transition new issue to Automated status
+     * If test is skipped, will call skip transition and issuelink functions
+     *
+     * @param string $testName
+     * @param array $test
+     * @param bool $isDryRun
+     *
+     * @return String
+     * @throws \Exception
+     */
+    public function createIssueREST($testName, array $test, $isDryRun = true)
+    {
+        $test = $this->defaultMissingFields($test);
+        $issueField = new IssueField();
+        /** Created fields:
+         *
+         * - Required fields:
+         * project, issueType, summary, components, severity, test type, release line
+         *
+         * - Additional fields:
+         * stories
+         * status
+         * label
+         * description + test name
+        */
+
+        $issueField->setProjectKey('MC');
+        $issueField->setSummary($test['title'][0]);
+        $issueField->setIssueType('Test');
+        $issueField->setDescription($test['description'][0] . self::NOTE_FOR_CREATE . $testName . "\n");
+        $issueField->addComponents($this->getZephyrComponentName($test['features'][0]));
+
+        if (isset($test['stories'])) {
+            $stories = $test['stories'][0];
+            if (!empty($stories)) {
+                $issueField->addCustomField('customfield_14364', $test['stories'][0]);
+            }
+        }
+        $issueField->addCustomField('customfield_12720', ['value' => $test['severity'][0]]);
+        $issueField->addCustomField('customfield_13324', ['value' => 'MFTF Test']); // Test Type
+        $issueField->addCustomField('customfield_14121', ['value' => $test['releaseLine'][0]]); // Release Line
+        $issueField->addLabel(self::CREATE_LABEL . ZephyrIntegrationManager::$timestamp);
+
+        $key = '';
+        $logMessage = "summary: " . $issueField->summary . "\ndescription: " . $issueField->description;
+        if (!$isDryRun) {
+            try {
+                $issueService = new IssueService();
+                $time_start = microtime(true);
+                $ret = $issueService->create($issueField);
+                $key = $ret->key;
+                $time_end = microtime(true);
+                $time = $time_end - $time_start;
+                $logMessage = "\nCREATED NEW TEST " . $key . ":\n" . $logMessage . "\nTook time:  " . $time . "\n";
+            } catch (JiraException $e) {
+                print("JIRA Exception: " . $e->getMessage());
+                LoggingUtil::getInstance()->getLogger(CreateIssue::class)->info(
+                    "JIRA Exception: " . $e->getMessage()
+                );
+            }
+        } else {
+            $logMessage = "\nDry Run... CREATED NEW TEST:\n" . $logMessage . "\n";
+            $key = 'MC-000'; // Dummy MC key
+        }
+        print($logMessage);
+        LoggingUtil::getInstance()->getLogger(CreateIssue::class)->info($logMessage);
+
+        // Transition this newly created issue from "Open" to "AUTOMATED" or "Skipped"
+        $transitionExecutor = new TransitionIssue();
+        $transitionExecutor->statusTransitionToAutomated($key, 'Open', $isDryRun);
+        if (isset($test['skip'])) {
+            $test += ['key' => $key];
+            $transitionExecutor->oneStepStatusTransition($key, 'Skipped', $isDryRun);
+            $updateIssue = new UpdateIssue();
+            $updateIssue->skipTestLinkIssue($test, $isDryRun);
+        }
+        return $key;
     }
 
     /**
@@ -36,7 +127,7 @@ class CreateIssue
      * @param $test
      * @return array
      */
-    static function defaultMissingFields($test)
+    private function defaultMissingFields($test)
     {
         if (!(isset($test['stories']))) {
             $test['stories'][0] = '';
@@ -54,84 +145,13 @@ class CreateIssue
     }
 
     /**
-     * Creates an issue in Zephyr from test data
-     * Will transition new issue to Automated status
-     * If test is skipped, will call skip transition and issuelink functions
-     *
-     * @param string $test
-     * @param string $releaseLine
-     * @param bool $isDryRun
-     *
-     * @return String
-     * @throws \Exception
-     */
-    static function createIssueREST($test, $releaseLine, $isDryRun = true)
-    {
-        $test = self::defaultMissingFields($test);
-        $issueField = new IssueField();
-        /** Created fields:
-         *
-         * - Required fields:
-         * project, issueType, summary, components, severity, test type, release line
-         *
-         * - Additional fields:
-         * stories
-         * status
-         * label
-         * description + test name
-        */
-
-        $issueField->setProjectKey('MC');
-        $issueField->setSummary($test['title'][0]);
-        //$issueField->setAssigneeName(getenv('JIRA_USER'));
-        $issueField->setIssueType('Test');
-        $issueField->setDescription($test['description'][0]);
-        $issueField->addComponents(self::getZephyrComponentName($test['features'][0]));
-        if (!emtpy($test['stories'][0])) {
-            $issueField->addCustomField('customfield_14364', $test['stories'][0]);
-        }
-        //$issueField->addCustomField('customfield_14362', ['value' => 'Catalog']);// TODO what's this field
-        $issueField->addCustomField('customfield_12720', ['value' => $test['severity'][0]]);
-        $issueField->addCustomField('customfield_13324', ['value' => 'MFTF Test']); // Test Type
-        $issueField->addCustomField('customfield_14121', ['value' => $releaseLine]); // Release Line
-        $issueField->addLabel('mzi_created');
-
-        $key = '';
-        $logMessage = $issueField->summary . " " . $issueField->description;
-        if (!$isDryRun) {
-            $issueService = new IssueService(null, null, realpath('../../../').'/');
-            $time_start = microtime(true);
-            $ret = $issueService->create($issueField);
-            $key = $ret->key;
-            $time_end = microtime(true);
-            $time = $time_end - $time_start;
-            $logMessage = "\nCREATED NEW TEST: " . $key . ": " . $logMessage . " Took time:  " . $time . "\n";
-            print_r($logMessage);
-        } else {
-            $logMessage = "Dry Run... CREATED NEW TEST: " . $logMessage . "\n";
-            $key = 'MC-000'; // Dummy MC key
-        }
-        LoggingUtil::getInstance()->getLogger(CreateIssue::class)->info($logMessage);
-
-        // transition this newly created issue from "Open" to "AUTOMATED" or "Skipped"
-        TransitionIssue::statusTransitionToAutomated($key, 'Open', $isDryRun);
-        if (isset($test['skip'])) {
-            $test += ['key' => $key];
-            TransitionIssue::oneStepStatusTransition($key, 'Skipped', $isDryRun);
-            UpdateIssue::skipTestLinkIssue($test, $isDryRun);
-        }
-        return $key;
-    }
-
-    /**
      * @param string $feature
      * @return string
      * @throws \Exception
      */
-    private static function getZephyrComponentName($feature)
+    private function getZephyrComponentName($feature)
     {
-        $zephyr = new GetZephyr();
-        $components = $zephyr->getComponentsForProject();
+        $components = GetZephyr::getInstance()->getComponentsForProject();
         foreach ($components as $component) {
             if (stripos($component, 'Module/ ' . $feature) !== false) {
                 return $component;
