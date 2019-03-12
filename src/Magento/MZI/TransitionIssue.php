@@ -21,11 +21,10 @@ class TransitionIssue
      *
      * @param string $key
      * @param string $status
-     * @param bool $isDryRun
      * @return void
      * @throws \Exception
      */
-    public function statusTransitionToAutomated($key, $status, $isDryRun = true)
+    public function statusTransitionToAutomated($key, $status)
     {
         $issueKey = $key;
         $startingStatus = $status;
@@ -39,12 +38,12 @@ class TransitionIssue
 
         foreach ($requiredTransitions as $status) {
             try {
-                $logMessage = $issueKey . " set to status " . $status;
+                $logMessage = $issueKey . " set to status " . $status . "\n";
                 $transition = new Transition();
                 if ($status == "Automated") {
                     $transition->fields = [
                         'resolution' => ['name' => 'Done'],
-                        'customfield_13783' => ['value' =>'Unknown']
+                        //'customfield_13783' => ['value' =>'Unknown']
                     ];
                 }
                 $transition->setTransitionName($status);
@@ -52,7 +51,7 @@ class TransitionIssue
 
                 $transitionIssueService = new IssueService();
 
-                if (!$isDryRun) {
+                if (!ZephyrIntegrationManager::$dryRun) {
                     $time_start = microtime(true);
                     $response = $transitionIssueService->transition($issueKey, $transition);
                     if ($response === true) {
@@ -74,7 +73,7 @@ class TransitionIssue
                 );
             }
         }
-        if (!$isDryRun) {
+        if (!ZephyrIntegrationManager::$dryRun) {
             $time_end = microtime(true);
             $time = $time_end - $time_start;
             print("\nTransition to Automated took : " . $time . "\n");
@@ -89,11 +88,10 @@ class TransitionIssue
      *
      * @param string $key
      * @param string $status
-     * @param bool $isDryRun
      * @return void
      * @throws \Exception
      */
-    public function oneStepStatusTransition($key, $status, $isDryRun = true)
+    public function oneStepStatusTransition($key, $status)
     {
         try {
             $transition = new Transition();
@@ -101,7 +99,7 @@ class TransitionIssue
             //$transition->setCommentBody("MFTF INTEGRATION - Setting $status status.");
 
             $logMessage = $key . " set to status " . $status;
-            if (!$isDryRun) {
+            if (!ZephyrIntegrationManager::$dryRun) {
                 $transitionIssueService = new IssueService();
 
                 $response = $transitionIssueService->transition($key, $transition);

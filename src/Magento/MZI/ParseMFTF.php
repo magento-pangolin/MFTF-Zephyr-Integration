@@ -10,6 +10,91 @@ use \Closure;
 
 class ParseMFTF
 {
+
+    /**
+     * Symbolic keywords of CE
+     *
+     * @var array
+     */
+    private static $keywordsCe = [
+        'adminnotification',
+        'backend',
+        'bundle',
+        'cache',
+        'msrp',
+        'newsletter',
+        'quote',
+        'reports',
+        'store',
+        'swagger',
+        'swatches',
+        'tax',
+        'user',
+    ];
+
+    /**
+     * Symbolic keywords of EE
+     *
+     * @var array
+     */
+    private static $keywordsEe = [
+        'admingws',
+        'banner',
+        'rma',
+        'reward',
+        'giftcard',
+        'scalable',
+    ];
+
+
+    /**
+     * Symbolic keywords of B2B
+     *
+     * @var array
+     */
+    private static $keywordsB2b = [
+        'b2b',
+        'company',
+        'negotiablequote',
+        'requisitionlist',
+        'sharedcatalog',
+        'quickorder',
+    ];
+
+    /**
+     * Symbolic keywords of Page Builder
+     *
+     * @var array
+     */
+    private static $keywordsPb = [
+        'pagebuilder',
+    ];
+
+    /**
+     * Symbolic keywords of Page Builder EE
+     *
+     * @var array
+     */
+    private static $keywordsPbEe = [
+        'bannerpagebuilder',
+        'catalogstagingpagebuilder',
+        'pagebuildercommerce',
+        'stagingpagebuilder',
+        'pagebuilder-ee',
+        'pagebuilder-staging',
+    ];
+
+    /**
+     * @var array
+     */
+    private static $flags = [
+        'ce' => 0,
+        'ee' => 0,
+        'b2b' => 0,
+        'pb' => 0,
+        'pbee' => 0,
+    ];
+
     /**
      * @var ParseMFTF
      */
@@ -63,10 +148,128 @@ class ParseMFTF
                     substr($annotation['title'][0], strpos($annotation['title'][0], ":") + 1)
                 );
             }
+
+            $featureGroups = [];
+            if (isset($annotation['feature'])) {
+                $featureGroups[] = $annotation['feature'];
+            }
+            if (isset($annotation['group'])) {
+                $featureGroups = array_merge($featureGroups, $annotation['group']);
+            }
+            $this->updateFlags($featureGroups);
+        }
+
+        if (!$this->validateAllFlags()) {
+            $logMessage = implode(',', $this->getInvalidFlags());
+            print("\nMissing mftf $logMessage tests. Please fix test setup and try again!\n");
+            exit(1);
         }
         print("\nFinished collecting mftf tests metadata\n");
         print ("Total mftf tests: " . count($annotations) . "\n\n");
         ZephyrIntegrationManager::$totalMftf = count($annotations);
         return $annotations;
+    }
+
+    /**
+     * Update flags
+     *
+     * @param array $featureGroups
+     * @return void
+     */
+    private function updateFlags(array $featureGroups)
+    {
+        if ($this->validateAllFlags()) {
+            return;
+        }
+
+        foreach ($featureGroups as $fg) {
+            $found = false;
+            if (self::$flags['ce'] == 0) {
+                foreach (self::$keywordsCe as $keyword) {
+                    if (strpos(strtolower($fg), $keyword) !== false) {
+                        self::$flags['ce'] = 1;
+                        $found = true;
+                        break;
+                    }
+                }
+            }
+
+            if (self::$flags['ee'] == 0 && !$found) {
+                foreach (self::$keywordsEe as $keyword) {
+                    if (strpos(strtolower($fg), $keyword) !== false) {
+                        self::$flags['ee'] = 1;
+                        $found = true;
+                        break;
+                    }
+                }
+            }
+
+            if (self::$flags['b2b'] == 0 && !$found) {
+                foreach (self::$keywordsB2b as $keyword) {
+                    if (strpos(strtolower($fg), $keyword) !== false) {
+                        self::$flags['b2b'] = 1;
+                        $found = true;
+                        break;
+                    }
+                }
+            }
+
+            // Check page builder ee first
+            if (self::$flags['pbee'] == 0 && !$found) {
+                foreach (self::$keywordsPbEe as $keyword) {
+                    if (strpos(strtolower($fg), $keyword) !== false) {
+                        self::$flags['pbee'] = 1;
+                        $found = true;
+                        break;
+                    }
+                }
+            }
+
+            if (self::$flags['pb'] == 0 && !$found) {
+                foreach (self::$keywordsPb as $keyword) {
+                    if (strpos(strtolower($fg), $keyword) !== false) {
+                        self::$flags['pb'] = 1;
+                        $found = true;
+                        break;
+                    }
+                }
+            }
+
+            if ($found) {
+                break;
+            }
+        }
+    }
+
+    /**
+     * Validate if flags are all set
+     *
+     * @return bool
+     */
+    private function validateAllFlags()
+    {
+       foreach (self::$flags as $flag) {
+           if ($flag == 0) {
+               return false;
+           }
+       }
+       return true;
+    }
+
+
+    /**
+     * Return key of the flags which is not set
+     *
+     * @return array
+     */
+    private function getInvalidFlags()
+    {
+        $out = [];
+        foreach (self::$flags as $key => $flag) {
+            if ($flag == 0) {
+                $out[] = $key;
+            }
+        }
+        return $out;
     }
 }

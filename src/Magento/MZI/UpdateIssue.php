@@ -42,11 +42,10 @@ class UpdateIssue
      *
      * @param array $update
      * @param string $key
-     * @param bool $isDryRun
      * @return void
      * @throws \Exception
      */
-    public function updateIssueREST(array $update, $key, $isDryRun = true)
+    public function updateIssueREST(array $update, $key)
     {
         /** Updated fields:
          *
@@ -59,10 +58,10 @@ class UpdateIssue
 
         $update += ['key' => $key];
         $issueField = $this->buildUpdateIssueField($update);
-        $issueField->setProjectKey("MC");
+        $issueField->setProjectKey(ZephyrIntegrationManager::$project);
         $issueField->setIssueType("Test");
         $logMessage = $update['key'] . " with data: \n" . $this->updatedFields;
-        if (!$isDryRun) {
+        if (!ZephyrIntegrationManager::$dryRun) {
             try {
                 $issueService = new IssueService();
                 $time_start = microtime(true);
@@ -86,14 +85,14 @@ class UpdateIssue
         $transitionExecutor = new TransitionIssue();
         if (isset($update['skip'])) {
             if ($update['status'] != "Automated") {
-                $transitionExecutor->statusTransitionToAutomated($update['key'], $update['status'], $isDryRun);
+                $transitionExecutor->statusTransitionToAutomated($update['key'], $update['status']);
             }
-            $transitionExecutor->oneStepStatusTransition($update['key'], "Skipped", $isDryRun);
-            $this->skipTestLinkIssue($update, $isDryRun);
+            $transitionExecutor->oneStepStatusTransition($update['key'], "Skipped");
+            $this->skipTestLinkIssue($update);
         }
         // Transition issue status to "Automated"
         if (isset($update['unskip'])) {
-            $transitionExecutor->oneStepStatusTransition($update['key'], "Automated", $isDryRun);
+            $transitionExecutor->oneStepStatusTransition($update['key'], "Automated");
         }
     }
 
@@ -156,10 +155,9 @@ class UpdateIssue
      * Sets an issueLink to the blocking issue for SKIPPED test
      *
      * @param array $update
-     * @param bool $isDryRun
      * @throws \Exception
      */
-    public function skipTestLinkIssue(array $update, $isDryRun = true)
+    public function skipTestLinkIssue(array $update)
     {
         try {
             $il = new IssueLink();
@@ -170,7 +168,7 @@ class UpdateIssue
                 ->setComment('Blocking issue for Skipped test');
 
             $logMessage = "\nLinked Issue: " . $update['skip'][0] . " to SKIPPED Test: " . $update['key'];
-            if (!$isDryRun) {
+            if (!ZephyrIntegrationManager::$dryRun) {
                 $ils = new IssueLinkService();
 
                 $time_start = microtime(true);

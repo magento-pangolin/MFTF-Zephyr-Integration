@@ -14,7 +14,7 @@
  *  --pbReleaseLine    Magento Page Builder release line that mftf tests run on
  */
 try {
-    require_once (__DIR__ . '/../magento/vendor/autoload.php');
+    require_once (__DIR__ . '/../../autoload.php');
 } catch (\Exception $e) {
     echo 'Autoload error: ' . $e->getMessage() . PHP_EOL . $e->getTraceAsString();
     exit(1);

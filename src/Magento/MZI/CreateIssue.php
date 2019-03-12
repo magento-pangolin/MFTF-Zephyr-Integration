@@ -46,12 +46,11 @@ class CreateIssue
      *
      * @param string $testName
      * @param array $test
-     * @param bool $isDryRun
      *
      * @return String
      * @throws \Exception
      */
-    public function createIssueREST($testName, array $test, $isDryRun = true)
+    public function createIssueREST($testName, array $test)
     {
         $test = $this->defaultMissingFields($test);
         $issueField = new IssueField();
@@ -67,7 +66,7 @@ class CreateIssue
          * description + test name
         */
 
-        $issueField->setProjectKey('MC');
+        $issueField->setProjectKey(ZephyrIntegrationManager::$project);
         $issueField->setSummary($test['title'][0]);
         $issueField->setIssueType('Test');
         $issueField->setDescription($test['description'][0] . self::NOTE_FOR_CREATE . $testName . "\n");
@@ -86,7 +85,7 @@ class CreateIssue
 
         $key = '';
         $logMessage = "summary: " . $issueField->summary . "\ndescription: " . $issueField->description;
-        if (!$isDryRun) {
+        if (!ZephyrIntegrationManager::$dryRun) {
             try {
                 $issueService = new IssueService();
                 $time_start = microtime(true);
@@ -94,7 +93,7 @@ class CreateIssue
                 $key = $ret->key;
                 $time_end = microtime(true);
                 $time = $time_end - $time_start;
-                $logMessage = "\nCREATED NEW TEST " . $key . ":\n" . $logMessage . "\nTook time:  " . $time . "\n";
+                $logMessage = "\nCREATED NEW TEST " . $key . ":\n" . $logMessage . "Took time:  " . $time . "\n";
             } catch (JiraException $e) {
                 print("JIRA Exception: " . $e->getMessage());
                 LoggingUtil::getInstance()->getLogger(CreateIssue::class)->info(
@@ -110,12 +109,12 @@ class CreateIssue
 
         // Transition this newly created issue from "Open" to "AUTOMATED" or "Skipped"
         $transitionExecutor = new TransitionIssue();
-        $transitionExecutor->statusTransitionToAutomated($key, 'Open', $isDryRun);
+        $transitionExecutor->statusTransitionToAutomated($key, 'Open');
         if (isset($test['skip'])) {
             $test += ['key' => $key];
-            $transitionExecutor->oneStepStatusTransition($key, 'Skipped', $isDryRun);
+            $transitionExecutor->oneStepStatusTransition($key, 'Skipped');
             $updateIssue = new UpdateIssue();
-            $updateIssue->skipTestLinkIssue($test, $isDryRun);
+            $updateIssue->skipTestLinkIssue($test);
         }
         return $key;
     }
