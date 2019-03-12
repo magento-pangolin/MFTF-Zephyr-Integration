@@ -48,17 +48,16 @@ class CreateManager
      * Manages passing data to Create operation and skipping test if necessary
      *
      * @param array $toBeCreatedTests
-     * @param bool $isDryRun
      *
      * @return void
      * @throws \Exception
      */
-    public function performCreateOperations(array $toBeCreatedTests, $isDryRun = true)
+    public function performCreateOperations(array $toBeCreatedTests)
     {
         foreach ($toBeCreatedTests as $testName => $test) {
             //$mftfLoggingDescriptor = ZephyrComparison::mftfLoggingDescriptor($test);
             $createIssue = new CreateIssue($test);
-            $response = $createIssue->createIssueREST($testName, $test, $isDryRun);
+            $response = $createIssue->createIssueREST($testName, $test);
             $createdIssueByName[] = $response;
         }
         ZephyrIntegrationManager::$totalCreated = count($toBeCreatedTests);

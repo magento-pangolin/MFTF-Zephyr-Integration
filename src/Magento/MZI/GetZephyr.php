@@ -58,7 +58,7 @@ class GetZephyr
      */
     public function getTestsByProject($projectKey = 'MC')
     {
-        $jql = "project = $projectKey AND issueType = Test AND status in (Automated, Skipped) ORDER BY key DESC";
+        $jql = "project = $projectKey AND issueType = Test AND status in (Automated, Skipped) ORDER BY key ASC";
         return $this->jqlPagination($jql);
     }
 

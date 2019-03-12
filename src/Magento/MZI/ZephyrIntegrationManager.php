@@ -48,11 +48,36 @@ class ZephyrIntegrationManager
     public static $releaseLine;
 
     /**
-     * Page builder relase line
+     * Page builder release line
      *
      * @var string
      */
     public static $pbReleaseLine;
+
+    /**
+     * Valid project keys
+     *
+     * @var array
+     */
+    public static $validProjectKeys = [
+        'MC',
+        'MCTEST',
+        'MAGETWO',
+    ];
+
+    /**
+     * Project key
+     *
+     * @var string
+     */
+    public static $project;
+
+    /**
+     * Run mode: dryRun or production
+     *
+     * @var bool
+     */
+    public static $dryRun = true;
 
     /**
      * Total mftf tests
@@ -128,7 +153,7 @@ class ZephyrIntegrationManager
     }
 
     /**
-     * @param bool $isDryRun
+     * @param bool $dryRun
      * @param string $project
      * @param string $releaseLine
      * @param string $pbReleaseLine
@@ -136,7 +161,7 @@ class ZephyrIntegrationManager
      * @throws \Exception
      */
     public function runMftfZephyrIntegration(
-        $isDryRun = true,
+        $dryRun = true,
         $project = '',
         $releaseLine = '',
         $pbReleaseLine = ''
@@ -146,16 +171,30 @@ class ZephyrIntegrationManager
 
         $this->parseOptions();
 
-        $isDryRun = !is_null(self::$cmdOptions['dryRun']) ? self::$cmdOptions['dryRun'] : $isDryRun;
+        self::$dryRun = !is_null(self::$cmdOptions['dryRun']) ? self::$cmdOptions['dryRun'] : $dryRun;
         $project = !is_null(self::$cmdOptions['project']) ? self::$cmdOptions['project'] : $project;
         $releaseLine = !is_null(self::$cmdOptions['releaseLine']) ? self::$cmdOptions['releaseLine'] : $releaseLine;
         $pbReleaseLine = !is_null(self::$cmdOptions['pbReleaseLine']) ? self::$cmdOptions['pbReleaseLine'] : $pbReleaseLine;
-        if (!$this->validateReleaseLine($releaseLine) || !$this->validatePbReleaseLine($pbReleaseLine)) {
+
+        if (!$this->validateProject($project)) {
+            print("\nInvalid command option: \"--project\"\n");
             $this->printUsage();
             exit(1);
         }
 
-        $zephyrTests = GetZephyr::getInstance()->getTestsByProject($project);
+        if (!$this->validateReleaseLine($releaseLine)) {
+            print("\nInvalid command option: \"--releaseLine\"\n");
+            $this->printUsage();
+            exit(1);
+        }
+
+        if (!$this->validatePbReleaseLine($pbReleaseLine)) {
+            print("\nInvalid command option: \"--pbReleaseLine\"\n");
+            $this->printUsage();
+            exit(1);
+        }
+
+        $zephyrTests = GetZephyr::getInstance()->getTestsByProject(self::$project);
         $mftfTests = ParseMFTF::getInstance()->getTestObjects();
 
         $zephyrComparison = new ZephyrComparison($mftfTests, $zephyrTests);
@@ -163,10 +202,11 @@ class ZephyrIntegrationManager
         $toBeCreatedTests = $zephyrComparison->getCreateArrayByName();
         $toBeUpdatedTests = $zephyrComparison->getUpdateArray();
 
-        CreateManager::getInstance()->performCreateOperations($toBeCreatedTests, $isDryRun);
-        UpdateManager::getInstance()->performUpdateOperations($toBeUpdatedTests, $isDryRun);
+        CreateManager::getInstance()->performCreateOperations($toBeCreatedTests);
+        UpdateManager::getInstance()->performUpdateOperations($toBeUpdatedTests);
 
         $this->printStats();
+        exit(0); // Done
     }
 
     private function parseOptions()
@@ -223,6 +263,21 @@ class ZephyrIntegrationManager
         } else {
             return false;
         }
+    }
+
+    /**
+     * Validate project
+     *
+     * @param string $key
+     * @return bool
+     */
+    private function validateProject($key)
+    {
+        if (in_array($key, self::$validProjectKeys)) {
+            self::$project = $key;
+            return true;
+        }
+        return false;
     }
 
     /**

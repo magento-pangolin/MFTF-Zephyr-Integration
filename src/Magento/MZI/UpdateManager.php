@@ -35,14 +35,13 @@ class UpdateManager
 
     /**
      * @param array $toBeUpdatedTests
-     * @param bool $isDryRun
      * @throws \Exception
      */
-    public function performUpdateOperations(array $toBeUpdatedTests, $isDryRun = true)
+    public function performUpdateOperations(array $toBeUpdatedTests)
     {
         foreach ($toBeUpdatedTests as $key => $update) {
             $updateIssue = new UpdateIssue();
-            $updateIssue->updateIssueREST($update, $key, $isDryRun);
+            $updateIssue->updateIssueREST($update, $key);
         }
         ZephyrIntegrationManager::$totalUpdated = count($toBeUpdatedTests);
         print("\n\nTotal updated zephyr tests: " . count($toBeUpdatedTests) . "\n\n");
