@@ -4,8 +4,6 @@
 #Log Files
 *.log
 
-#phpStorm files
 .idea
-
-#vscode files
 .vscode
+.DS_Store
