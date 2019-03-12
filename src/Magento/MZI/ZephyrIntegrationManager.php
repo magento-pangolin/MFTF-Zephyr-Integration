@@ -211,11 +211,18 @@ class ZephyrIntegrationManager
 
     private function parseOptions()
     {
-        if (!isset($_SERVER['argv']) || !is_array($_SERVER['argv'])) {
+        $args = [];
+        if (isset($_SERVER['argv'])) {
+            $args = $_SERVER['argv'];
+        } elseif (isset($argv)) {
+            $args = $argv;
+        } else {
+            print("\nCommand line argv is not set\n");
             $this->printUsage();
             exit(1);
         }
-        foreach ($_SERVER['argv'] as $arg) {
+
+        foreach ($args as $arg) {
             $parts = explode('=', $arg);
             if (count($parts) == 2) {
                 $key = ltrim(trim($parts[0]," \t\n\r\0\x0B\'\""), "\-\--");
