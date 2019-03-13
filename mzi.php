@@ -28,4 +28,5 @@ try {
         echo "\n\n";
         $e = $e->getPrevious();
     }
+    exit(1);
 }

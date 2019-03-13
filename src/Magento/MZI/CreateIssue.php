@@ -99,6 +99,8 @@ class CreateIssue
                 LoggingUtil::getInstance()->getLogger(CreateIssue::class)->info(
                     "JIRA Exception: " . $e->getMessage()
                 );
+                print("\nException occurs in JIRA create(), exiting with code 1\n");
+                exit(1);
             }
         } else {
             $logMessage = "\nDry Run... CREATED NEW TEST:\n" . $logMessage . "\n";

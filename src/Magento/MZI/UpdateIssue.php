@@ -74,6 +74,8 @@ class UpdateIssue
                 LoggingUtil::getInstance()->getLogger(UpdateIssue::class)->info(
                     "JIRA Exception: " . $e->getMessage()
                 );
+                print("\nException occurs in JIRA update(), exiting with code 1\n");
+                exit(1);
             }
         } else {
             $logMessage = "Dry Run... UPDATED TEST: " . $logMessage . "\n";
@@ -187,6 +189,14 @@ class UpdateIssue
             LoggingUtil::getInstance()->getLogger(UpdateIssue::class)->info(
                 "JIRA Exception: " . $e->getMessage()
             );
+            print(
+                "\nException occurs in JIRA addIssueLink() on InwardIssue "
+                . $update['skip'][0]
+                . " OutwardIssue "
+                . $update['key']
+                . ", exiting with code 1\n"
+            );
+            exit(1);
         }
     }
 }
