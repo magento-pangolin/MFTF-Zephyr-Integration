@@ -140,6 +140,8 @@ class GetZephyr
             LoggingUtil::getInstance()->getLogger(UpdateIssue::class)->info(
                 "JIRA Exception: " . $e->getMessage()
             );
+            print("\nException occurs in JIRA search(), exiting with code 1\n");
+            exit(1);
         }
         return $zephyrIDs;
     }

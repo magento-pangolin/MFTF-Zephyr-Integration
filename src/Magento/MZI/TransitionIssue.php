@@ -71,6 +71,8 @@ class TransitionIssue
                 LoggingUtil::getInstance()->getLogger(TransitionIssue::class)->info(
                     "While processing " . $logMessage . "JIRA Exception: " . $e->getMessage()
                 );
+                print("\nException occurs in JIRA transition() on $issueKey, exiting with code 1\n");
+                exit(1);
             }
         }
         if (!ZephyrIntegrationManager::$dryRun) {
@@ -120,6 +122,8 @@ class TransitionIssue
             LoggingUtil::getInstance()->getLogger(TransitionIssue::class)->error(
                 'Error Occurred!  ' . $e->getMessage()
             );
+            print("\nException occurs in JIRA transition() on $key, exiting with code 1\n");
+            exit(1);
         }
     }
 }
