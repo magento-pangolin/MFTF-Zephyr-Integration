@@ -39,7 +39,7 @@ class TransitionIssue
         foreach ($requiredTransitions as $status) {
             try {
                 $logMessage = $issueKey . " set to status " . $status . "\n";
-                $transition = new Transition();
+                $transition = new Transition(null, null, __DIR__  . '/../../../');
                 if ($status == "Automated") {
                     $transition->fields = [
                         'resolution' => ['name' => 'Done'],
@@ -49,7 +49,7 @@ class TransitionIssue
                 $transition->setTransitionName($status);
                 //$transition->setCommentBody("MFTF INTEGRATION - Setting " . $status . " status.");
 
-                $transitionIssueService = new IssueService();
+                $transitionIssueService = new IssueService(null, null, __DIR__  . '/../../../');
 
                 if (!ZephyrIntegrationManager::$dryRun) {
                     $time_start = microtime(true);
@@ -96,13 +96,13 @@ class TransitionIssue
     public function oneStepStatusTransition($key, $status)
     {
         try {
-            $transition = new Transition();
+            $transition = new Transition(null, null, __DIR__  . '/../../../');
             $transition->setTransitionName($status);
             //$transition->setCommentBody("MFTF INTEGRATION - Setting $status status.");
 
             $logMessage = $key . " set to status " . $status;
             if (!ZephyrIntegrationManager::$dryRun) {
-                $transitionIssueService = new IssueService();
+                $transitionIssueService = new IssueService(null, null, __DIR__  . '/../../../');
 
                 $response = $transitionIssueService->transition($key, $transition);
                 if ($response === true) {

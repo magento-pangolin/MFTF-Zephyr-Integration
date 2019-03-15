@@ -82,28 +82,28 @@ class ZephyrIntegrationManager
     /**
      * Total mftf tests
      *
-     * @var string
+     * @var integer
      */
     public static $totalMftf = 0;
 
     /**
      * Total zephyr tests
      *
-     * @var string
+     * @var integer
      */
     public static $totalZephyr = 0;
 
     /**
      * Total created zephyr tests
      *
-     * @var string
+     * @var integer
      */
     public static $totalCreated = 0;
 
     /**
      * Total updated zephyr tests
      *
-     * @var string
+     * @var integer
      */
     public static $totalUpdated = 0;
 

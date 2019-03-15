@@ -75,7 +75,7 @@ class GetZephyr
             return self::$projectComponents[$projectKey];
         }
         self::$projectComponents[$projectKey] = [];
-        $projectService = new ProjectService();
+        $projectService = new ProjectService(null, null, __DIR__  . '/../../../');
         $project = $projectService->get($projectKey);
         foreach ($project->components as $component) {
             if (strpos($component->name, 'Module/') === false) {
@@ -105,7 +105,7 @@ class GetZephyr
             print ("\nFetching zephyr tests by jql...\n");
 
             $zephyrIDs = [];
-            $issueService = new IssueService();
+            $issueService = new IssueService(null, null, __DIR__  . '/../../../');
             $startAt = 0;	//the index of the first issue to return (0-based)
             $maxResult = 100;	// the maximum number of issues to return (defaults to 50).
 

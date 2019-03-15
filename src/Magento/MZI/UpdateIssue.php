@@ -63,7 +63,7 @@ class UpdateIssue
         $logMessage = $update['key'] . " with data: \n" . $this->updatedFields;
         if (!ZephyrIntegrationManager::$dryRun) {
             try {
-                $issueService = new IssueService();
+                $issueService = new IssueService(null, null, __DIR__  . '/../../../');
                 $time_start = microtime(true);
                 $response = $issueService->update($update['key'], $issueField); // return true on success
                 $time_end = microtime(true);
@@ -84,7 +84,7 @@ class UpdateIssue
         LoggingUtil::getInstance()->getLogger(UpdateIssue::class)->info($logMessage);
 
         // Transition issue status to "Skipped"
-        $transitionExecutor = new TransitionIssue();
+        $transitionExecutor = new TransitionIssue(null, null, __DIR__  . '/../../../');
         if (isset($update['skip'])) {
             if ($update['status'] != "Automated") {
                 $transitionExecutor->statusTransitionToAutomated($update['key'], $update['status']);
@@ -108,7 +108,7 @@ class UpdateIssue
     private function buildUpdateIssueField(array $update)
     {
         $this->updatedFields = '';
-        $issueField = new IssueField();
+        $issueField = new IssueField(null, null, __DIR__  . '/../../../');
         if (isset($update['title'])) {
             $issueField->setSummary($update['title']);
             $this->updatedFields .= "title = " . $update['title'] . "\n";
@@ -162,7 +162,7 @@ class UpdateIssue
     public function skipTestLinkIssue(array $update)
     {
         try {
-            $il = new IssueLink();
+            $il = new IssueLink(null, null, __DIR__  . '/../../../');
 
             $il->setInwardIssue($update['skip'][0])
                 ->setOutwardIssue($update['key'])
@@ -171,7 +171,7 @@ class UpdateIssue
 
             $logMessage = "\nLinked Issue: " . $update['skip'][0] . " to SKIPPED Test: " . $update['key'];
             if (!ZephyrIntegrationManager::$dryRun) {
-                $ils = new IssueLinkService();
+                $ils = new IssueLinkService(null, null, __DIR__  . '/../../../');
 
                 $time_start = microtime(true);
                 $ret = $ils->addIssueLink($il);

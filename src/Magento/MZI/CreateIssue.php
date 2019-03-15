@@ -53,7 +53,7 @@ class CreateIssue
     public function createIssueREST($testName, array $test)
     {
         $test = $this->defaultMissingFields($test);
-        $issueField = new IssueField();
+        $issueField = new IssueField(null, null, __DIR__  . '/../../../');
         /** Created fields:
          *
          * - Required fields:
@@ -87,7 +87,7 @@ class CreateIssue
         $logMessage = "summary: " . $issueField->summary . "\ndescription: " . $issueField->description;
         if (!ZephyrIntegrationManager::$dryRun) {
             try {
-                $issueService = new IssueService();
+                $issueService = new IssueService(null, null, __DIR__  . '/../../../');
                 $time_start = microtime(true);
                 $ret = $issueService->create($issueField);
                 $key = $ret->key;
@@ -110,12 +110,12 @@ class CreateIssue
         LoggingUtil::getInstance()->getLogger(CreateIssue::class)->info($logMessage);
 
         // Transition this newly created issue from "Open" to "AUTOMATED" or "Skipped"
-        $transitionExecutor = new TransitionIssue();
+        $transitionExecutor = new TransitionIssue(null, null, __DIR__  . '/../../../');
         $transitionExecutor->statusTransitionToAutomated($key, 'Open');
         if (isset($test['skip'])) {
             $test += ['key' => $key];
             $transitionExecutor->oneStepStatusTransition($key, 'Skipped');
-            $updateIssue = new UpdateIssue();
+            $updateIssue = new UpdateIssue(null, null, __DIR__  . '/../../../');
             $updateIssue->skipTestLinkIssue($test);
         }
         return $key;
