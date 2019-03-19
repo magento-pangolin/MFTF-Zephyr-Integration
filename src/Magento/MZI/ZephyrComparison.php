@@ -215,21 +215,16 @@ class ZephyrComparison
     {
         $logMessage = '';
         if (isset($mftfTest['title']) && isset($zephyrTest['summary'])) {
-            if ($mftfTest['title'][0] != trim($zephyrTest['summary'])) {
-                $this->mismatches[$key]['title'] = $mftfTest['title'][0];
-                $logMessage .=
-                    "Title comparison failed:\nmftf="
-                    . $mftfTest['title'][0]
-                    . "\nzephyr="
-                    . $zephyrTest['summary']
-                    ."\n";
+            $mftf = trim($mftfTest['title'][0]);
+            $zephyr = trim($zephyrTest['summary']);
+            if (strcasecmp($mftf, $zephyr) != 0) {
+                $this->mismatches[$key]['title'] = $mftf;
+                $logMessage .= "Title comparison failed:\nmftf=" . $mftf . "\nzephyr=" . $zephyr ."\n";
             }
-        } elseif (isset($mftfTest['title'])){
-            $this->mismatches[$key]['title'] = $mftfTest['title'][0];
-            $logMessage .=
-                "Title comparison failed:\nmftf="
-                . $mftfTest['title'][0]
-                . "\nzephyr=\n";
+        } elseif (isset($mftfTest['title']) && !empty(trim($mftfTest['title'][0]))){
+            $mftf = trim($mftfTest['title'][0]);
+            $this->mismatches[$key]['title'] = $mftf;
+            $logMessage .= "Title comparison failed:\nmftf=" . $mftf . "\nzephyr=\n";
         }
 
         if (isset($zephyrTest['description'])) {
@@ -239,59 +234,42 @@ class ZephyrComparison
             $zephyrTest['description'] = isset($parts[0]) ? $parts[0] : $zephyrTest['description'];
         }
         if (isset($mftfTest['description']) && isset($zephyrTest['description'])) {
-            if ($mftfTest['description'][0] != trim($zephyrTest['description'])) {
-                $this->mismatches[$key]['description'] = $mftfTest['description'][0];
-                $logMessage .=
-                    "Description comparison failed:\nmftf="
-                    . $mftfTest['description'][0]
-                    . "\nzephyr="
-                    . $zephyrTest['description']
-                    ."\n";
+            $mftf = trim($mftfTest['description'][0]);
+            $zephyr = trim($zephyrTest['description']);
+            if (strcasecmp($mftf, $zephyr) != 0) {
+                $this->mismatches[$key]['description'] = $mftf;
+                $logMessage .= "Description comparison failed:\nmftf=" . $mftf . "\nzephyr=" . $zephyr ."\n";
             }
-        } elseif (isset($mftfTest['description'])) {
-            $this->mismatches[$key]['description'] = $mftfTest['description'][0];
-            $logMessage .=
-                "Description comparison failed:\nmftf="
-                . $mftfTest['description'][0]
-                . "\nzephyr=\n";
+        } elseif (isset($mftfTest['description']) && !empty(trim($mftfTest['description'][0]))) {
+            $mftf = trim($mftfTest['description'][0]);
+            $this->mismatches[$key]['description'] = $mftf;
+            $logMessage .= "Description comparison failed:\nmftf=" . $mftf . "\nzephyr=\n";
         }
 
         if (isset($mftfTest['stories']) && isset($zephyrTest['customfield_14364'])) {
-            if ($mftfTest['stories'][0] != trim($zephyrTest['customfield_14364'])) {
-                $this->mismatches[$key]['stories'] = $mftfTest['stories'][0];
-                $logMessage .=
-                    "Stories comparison failed:\nmftf="
-                    . $mftfTest['stories'][0]
-                    . "\nzephyr="
-                    . $zephyrTest['customfield_14364']
-                    ."\n";
+            $mftf = trim($mftfTest['stories'][0]);
+            $zephyr = trim($zephyrTest['customfield_14364']);
+            if (strcasecmp($mftf, $zephyr) != 0) {
+                $this->mismatches[$key]['stories'] = $mftf;
+                $logMessage .= "Stories comparison failed:\nmftf=" . $mftf . "\nzephyr=" . $zephyr ."\n";
             }
-        } elseif (isset($mftfTest['stories'])) {
-            $this->mismatches[$key]['stories'] = $mftfTest['stories'][0];
-            $logMessage .=
-                "Stories comparison failed:\nmftf="
-                . $mftfTest['stories'][0]
-                . "\nzephyr=\n";
+        } elseif (isset($mftfTest['stories']) && !empty(trim($mftfTest['stories'][0]))) {
+            $mftf = trim($mftfTest['stories'][0]);
+            $this->mismatches[$key]['stories'] = $mftf;
+            $logMessage .= "Stories comparison failed:\nmftf=" . $mftf . "\nzephyr=\n";
         }
 
         if (isset($mftfTest['severity'][0])) {
-            $mftfSeverity = $this->transformSeverity($mftfTest['severity'][0]);
+            $mftf = $this->transformSeverity($mftfTest['severity'][0]);
             if (isset($zephyrTest['customfield_12720'])) {
-                if ($mftfSeverity != trim($zephyrTest['customfield_12720']['value'])) {
-                    $this->mismatches[$key]['severity'] = $mftfSeverity;
-                    $logMessage .=
-                        "Severity comparison failed:\nmftf="
-                        . $mftfSeverity
-                        . "\nzephyr="
-                        . $zephyrTest['customfield_12720']['value']
-                        ."\n";
+                $zephyr = trim($zephyrTest['customfield_12720']['value']);
+                if (strcasecmp($mftf, $zephyr) != 0) {
+                    $this->mismatches[$key]['severity'] = $mftf;
+                    $logMessage .= "Severity comparison failed:\nmftf=" . $mftf . "\nzephyr=" . $zephyr ."\n";
                 }
             } else {
-                $this->mismatches[$key]['severity'] = $mftfSeverity;
-                $logMessage .=
-                    "Severity comparison failed:\nmftf="
-                    . $mftfSeverity
-                    . "\nzephyr=\n";
+                $this->mismatches[$key]['severity'] = $mftf;
+                $logMessage .= "Severity comparison failed:\nmftf=" . $mftf . "\nzephyr=\n";
             }
         }
 
@@ -328,7 +306,7 @@ class ZephyrComparison
         if (isset($this->mismatches[$key])) {
             // Save description as we will always update it
             if (!isset($this->mismatches[$key]['description'] )) {
-                $this->mismatches[$key]['description'] = $mftfTest['description'][0];
+                $this->mismatches[$key]['description'] = trim($mftfTest['description'][0]);
             }
             $this->mismatches[$key]['mftf_test_name'] = $mftfTestName; // Save mftf test name
             $this->mismatches[$key]['status'] = $zephyrTest['status']['name']; // Save current Zephyr status

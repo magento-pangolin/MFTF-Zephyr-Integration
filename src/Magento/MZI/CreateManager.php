@@ -47,20 +47,28 @@ class CreateManager
     /**
      * Manages passing data to Create operation and skipping test if necessary
      *
-     * @param array $toBeCreatedTests
+     * @param mixed $toBeCreatedTests
      *
      * @return void
      * @throws \Exception
      */
-    public function performCreateOperations(array $toBeCreatedTests)
+    public function performCreateOperations($toBeCreatedTests)
     {
+        if (!is_array($toBeCreatedTests)) {
+            print("\n\nTotal Zephyr Tests Created: 0\n\n");
+            return;
+        }
+        $count = 0;
+        $total = count($toBeCreatedTests);
+        print("\n\nTotal Zephyr Tests To Be Created: $total\n\n");
         foreach ($toBeCreatedTests as $testName => $test) {
-            //$mftfLoggingDescriptor = ZephyrComparison::mftfLoggingDescriptor($test);
             $createIssue = new CreateIssue($test);
             $response = $createIssue->createIssueREST($testName, $test);
             $createdIssueByName[] = $response;
+            $count += 1;
+            print("\nZephyr Tests Created: $count" . "/" . "$total\n\n");
         }
-        ZephyrIntegrationManager::$totalCreated = count($toBeCreatedTests);
-        print("\n\nTotal created zephyr tests: " . count($toBeCreatedTests) . "\n\n");
+        ZephyrIntegrationManager::$totalCreated = $count;
+        print("\n\nTotal Zephyr Tests Created: $count\n\n");
     }
 }
