@@ -37,51 +37,80 @@ class TransitionIssue
         $requiredTransitions = array_slice($projectMcTransitionStates, $currentStatusOffset+1);
 
         foreach ($requiredTransitions as $status) {
+            $logMessage = "\nSetting " . $issueKey . " To " . $status . "\n";
+            $time_start = microtime(true);
             try {
-                $logMessage = $issueKey . " set to status " . $status . "\n";
-                $transition = new Transition();
+                $transition = new Transition(null, null, __DIR__  . '/../../../');
                 if ($status == "Automated") {
                     $transition->fields = [
                         'resolution' => ['name' => 'Done'],
-                        //'customfield_13783' => ['value' =>'Unknown']
                     ];
                 }
                 $transition->setTransitionName($status);
-                //$transition->setCommentBody("MFTF INTEGRATION - Setting " . $status . " status.");
 
-                $transitionIssueService = new IssueService();
+                $transitionIssueService = new IssueService(null, null, __DIR__  . '/../../../');
 
                 if (!ZephyrIntegrationManager::$dryRun) {
-                    $time_start = microtime(true);
                     $response = $transitionIssueService->transition($issueKey, $transition);
-                    if ($response === true) {
-                        print($logMessage);
-                        LoggingUtil::getInstance()->getLogger(TransitionIssue::class)->info(
-                            'SUCCESS! ' . $logMessage
-                        );
-                    }
-                } else {
-                    print('Dry Run... SUCCESS! ' . $logMessage);
+                    $time_end = microtime(true);
+                    $time = $time_end - $time_start;
+                    print($logMessage . "Completed In $time Seconds\n");
                     LoggingUtil::getInstance()->getLogger(TransitionIssue::class)->info(
-                        'Dry Run... SUCCESS! ' . $logMessage
+                        $logMessage . "Completed In $time Seconds\n"
+                    );
+                } else {
+                    print("Dry Run... " . $logMessage . "Completed!\n");
+                    LoggingUtil::getInstance()->getLogger(TransitionIssue::class)->info(
+                        "Dry Run... " . $logMessage . "Completed!\n"
                     );
                 }
             } catch (JiraException $e) {
-                print("While processing " . $logMessage . "JIRA Exception: " . $e->getMessage());
+                print("\nException Occurs In JIRA transition(). " . $e->getMessage());
                 LoggingUtil::getInstance()->getLogger(TransitionIssue::class)->info(
-                    "While processing " . $logMessage . "JIRA Exception: " . $e->getMessage()
+                    "\nException Occurs In JIRA transition(). " . $e->getMessage()
                 );
-                print("\nException occurs in JIRA transition() on $issueKey, exiting with code 1\n");
-                exit(1);
+                $success = false;
+                for ($i = 0; $i < ZephyrIntegrationManager::$retryCount; $i++) {
+                    print("\nRetry # $i...\n");
+                    LoggingUtil::getInstance()->getLogger(TransitionIssue::class)->info("\nRetry # $i...\n");
+                    try {
+                        $transition = new Transition(null, null, __DIR__  . '/../../../');
+                        $transition->setTransitionName($status);
+                        $transitionIssueService = new IssueService(null, null, __DIR__  . '/../../../');
+                        $response = $transitionIssueService->transition($issueKey, $transition);
+                        $time_end = microtime(true);
+                        $time = $time_end - $time_start;
+                        print($logMessage . "Completed In $time Seconds\n");
+                        LoggingUtil::getInstance()->getLogger(TransitionIssue::class)->info(
+                            $logMessage . "Completed In $time Seconds\n"
+                        );
+                        $success = true;
+                        break;
+                    } catch (JiraException $e2) {
+                        $e = $e2;
+                    }
+                }
+                if (!$success) {
+                    print(
+                        "While Processing "
+                        . $logMessage
+                        . "After "
+                        . ZephyrIntegrationManager::$retryCount
+                        . " Tries, Still Getting JIRA Exception: "
+                        . $e->getMessage()
+                    );
+                    LoggingUtil::getInstance()->getLogger(TransitionIssue::class)->info(
+                        "While Processing "
+                        . $logMessage
+                        . "After "
+                        . ZephyrIntegrationManager::$retryCount
+                        . " Tries, Still Getting JIRA Exception: "
+                        . $e->getMessage()
+                    );
+                    print("\nExiting With Code 1\n");
+                    exit(1);
+                }
             }
-        }
-        if (!ZephyrIntegrationManager::$dryRun) {
-            $time_end = microtime(true);
-            $time = $time_end - $time_start;
-            print("\nTransition to Automated took : " . $time . "\n");
-            LoggingUtil::getInstance()->getLogger(TransitionIssue::class)->info(
-                "\nTransition to Automated took: $time\n"
-            );
         }
     }
 
@@ -95,35 +124,83 @@ class TransitionIssue
      */
     public function oneStepStatusTransition($key, $status)
     {
+        $logMessage = "\nSetting $key To $status\n";
+        $time_start = microtime(true);
         try {
-            $transition = new Transition();
+            $transition = new Transition(null, null, __DIR__  . '/../../../');
             $transition->setTransitionName($status);
-            //$transition->setCommentBody("MFTF INTEGRATION - Setting $status status.");
+            if ($status == "Automated") {
+                $transition->fields = [
+                    'resolution' => ['name' => 'Done'],
+                ];
+            }
 
-            $logMessage = $key . " set to status " . $status;
             if (!ZephyrIntegrationManager::$dryRun) {
-                $transitionIssueService = new IssueService();
-
+                $transitionIssueService = new IssueService(null, null, __DIR__  . '/../../../');
                 $response = $transitionIssueService->transition($key, $transition);
-                if ($response === true) {
-                    print("\n" . "SUCCESS! $logMessage");
-                    LoggingUtil::getInstance()->getLogger(TransitionIssue::class)->info(
-                        'SUCCESS! ' . $logMessage
-                    );
-                }
-            } else {
-                print('Dry Run... SUCCESS! ' . $logMessage);
+                $time_end = microtime(true);
+                $time = $time_end - $time_start;
+                print($logMessage . "Completed In $time Seconds\n");
                 LoggingUtil::getInstance()->getLogger(TransitionIssue::class)->info(
-                    'Dry Run... SUCCESS! ' . $logMessage
+                    $logMessage . "Completed In $time Seconds\n"
+                );
+            } else {
+                print("Dry Run... " . $logMessage . "Completed!\n");
+                LoggingUtil::getInstance()->getLogger(TransitionIssue::class)->info(
+                    "Dry Run... " . $logMessage . "Completed!\n"
                 );
             }
         } catch (JiraException $e) {
-            print("Error Occurred! " . $e->getMessage());
-            LoggingUtil::getInstance()->getLogger(TransitionIssue::class)->error(
-                'Error Occurred!  ' . $e->getMessage()
+            print("\nException Occurs In JIRA transition(). " . $e->getMessage());
+            LoggingUtil::getInstance()->getLogger(TransitionIssue::class)->info(
+                "\nException Occurs In JIRA transition(). " . $e->getMessage()
             );
-            print("\nException occurs in JIRA transition() on $key, exiting with code 1\n");
-            exit(1);
+            $success = false;
+            for ($i = 0; $i < ZephyrIntegrationManager::$retryCount; $i++) {
+                print("\nRetry # $i...\n");
+                LoggingUtil::getInstance()->getLogger(TransitionIssue::class)->info("\nRetry # $i...\n");
+                try {
+                    $transition = new Transition(null, null, __DIR__  . '/../../../');
+                    $transition->setTransitionName($status);
+                    if ($status == "Automated") {
+                        $transition->fields = [
+                            'resolution' => ['name' => 'Done'],
+                        ];
+                    }
+                    $transitionIssueService = new IssueService(null, null, __DIR__  . '/../../../');
+                    $response = $transitionIssueService->transition($key, $transition);
+                    $time_end = microtime(true);
+                    $time = $time_end - $time_start;
+                    print($logMessage . "Completed In $time Seconds\n");
+                    LoggingUtil::getInstance()->getLogger(TransitionIssue::class)->info(
+                        $logMessage . "Completed In $time Seconds\n"
+                    );
+                    $success = true;
+                    break;
+                } catch (JiraException $e2) {
+                    $e = $e2;
+                }
+            }
+            if (!$success) {
+                print(
+                    "While Processing "
+                    . $logMessage
+                    . "After "
+                    . ZephyrIntegrationManager::$retryCount
+                    . " Tries, Still Getting JIRA Exception: "
+                    . $e->getMessage()
+                );
+                LoggingUtil::getInstance()->getLogger(TransitionIssue::class)->info(
+                    "While Processing "
+                    . $logMessage
+                    . "After "
+                    . ZephyrIntegrationManager::$retryCount
+                    . " Tries, Still Getting JIRA Exception: "
+                    . $e->getMessage()
+                );
+                print("\nExiting With Code 1\n");
+                exit(1);
+            }
         }
     }
 }

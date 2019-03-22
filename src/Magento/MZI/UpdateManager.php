@@ -34,16 +34,29 @@ class UpdateManager
     }
 
     /**
-     * @param array $toBeUpdatedTests
+     * Manages passing data to Update operation and skipping test if necessary
+     *
+     * @param mixed $toBeUpdatedTests
+     *
+     * @return void
      * @throws \Exception
      */
-    public function performUpdateOperations(array $toBeUpdatedTests)
+    public function performUpdateOperations($toBeUpdatedTests)
     {
+        if (!is_array($toBeUpdatedTests)) {
+            print("\n\nTotal Zephyr Tests Updated: 0\n\n");
+            return;
+        }
+        $count = 0;
+        $total = count($toBeUpdatedTests);
+        print("\n\nTotal Zephyr Tests To Be Updated: $total\n\n");
         foreach ($toBeUpdatedTests as $key => $update) {
             $updateIssue = new UpdateIssue();
             $updateIssue->updateIssueREST($update, $key);
+            $count += 1;
+            print("\nZephyr Tests Updated: $count" . "/" . "$total\n\n");
         }
-        ZephyrIntegrationManager::$totalUpdated = count($toBeUpdatedTests);
-        print("\n\nTotal updated zephyr tests: " . count($toBeUpdatedTests) . "\n\n");
+        ZephyrIntegrationManager::$totalUpdated = $count;
+        print("\n\nTotal Zephyr Tests Updated: $count\n\n");
     }
 }

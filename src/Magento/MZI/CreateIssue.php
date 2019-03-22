@@ -53,7 +53,7 @@ class CreateIssue
     public function createIssueREST($testName, array $test)
     {
         $test = $this->defaultMissingFields($test);
-        $issueField = new IssueField();
+        $issueField = new IssueField(null, null, __DIR__  . '/../../../');
         /** Created fields:
          *
          * - Required fields:
@@ -84,38 +84,72 @@ class CreateIssue
         $issueField->addLabel(self::CREATE_LABEL . ZephyrIntegrationManager::$timestamp);
 
         $key = '';
-        $logMessage = "summary: " . $issueField->summary . "\ndescription: " . $issueField->description;
+        $logMessage = "\nCreating Test With Data:\nSummary: " . $issueField->summary . "\nDescription: " . $issueField->description;
+        $time_start = microtime(true);
         if (!ZephyrIntegrationManager::$dryRun) {
             try {
-                $issueService = new IssueService();
-                $time_start = microtime(true);
+                $issueService = new IssueService(null, null, __DIR__  . '/../../../');
                 $ret = $issueService->create($issueField);
                 $key = $ret->key;
                 $time_end = microtime(true);
                 $time = $time_end - $time_start;
-                $logMessage = "\nCREATED NEW TEST " . $key . ":\n" . $logMessage . "Took time:  " . $time . "\n";
+                $logMessage .= "Created New Test $key In $time Seconds\n";
             } catch (JiraException $e) {
-                print("JIRA Exception: " . $e->getMessage());
+                print("\nException Occurs In JIRA create(). " . $e->getMessage());
                 LoggingUtil::getInstance()->getLogger(CreateIssue::class)->info(
-                    "JIRA Exception: " . $e->getMessage()
+                    "\nException Occurs In JIRA create(). " . $e->getMessage()
                 );
-                print("\nException occurs in JIRA create(), exiting with code 1\n");
-                exit(1);
+                $success = false;
+                for ($i = 0; $i < ZephyrIntegrationManager::$retryCount; $i++) {
+                    print("\nRetry # $i...\n");
+                    LoggingUtil::getInstance()->getLogger(CreateIssue::class)->info("\nRetry # $i...\n");
+                    try {
+                        $issueService = new IssueService(null, null, __DIR__  . '/../../../');
+                        $ret = $issueService->create($issueField);
+                        $key = $ret->key;
+                        $time_end = microtime(true);
+                        $time = $time_end - $time_start;
+                        $logMessage .= "Created New Test $key In $time Seconds\n";
+                        $success = true;
+                        break;
+                    } catch (JiraException $e2) {
+                        $e = $e2;
+                    }
+                }
+                if (!$success) {
+                    print(
+                        "While Processing "
+                        . $logMessage
+                        . "After "
+                        . ZephyrIntegrationManager::$retryCount
+                        . " Tries, Still Getting JIRA Exception: "
+                        . $e->getMessage()
+                    );
+                    LoggingUtil::getInstance()->getLogger(CreateIssue::class)->info(
+                        "While Processing "
+                        . $logMessage
+                        . "After "
+                        . ZephyrIntegrationManager::$retryCount
+                        . " Tries, Still Getting JIRA Exception: "
+                        . $e->getMessage()
+                    );
+                    print("\nExiting With Code 1\n");
+                    exit(1);
+                }
             }
         } else {
-            $logMessage = "\nDry Run... CREATED NEW TEST:\n" . $logMessage . "\n";
-            $key = 'MC-000'; // Dummy MC key
+            $logMessage = "\nDry Run... $logMessage" . "Completed!\n\n";
         }
         print($logMessage);
         LoggingUtil::getInstance()->getLogger(CreateIssue::class)->info($logMessage);
 
         // Transition this newly created issue from "Open" to "AUTOMATED" or "Skipped"
-        $transitionExecutor = new TransitionIssue();
+        $transitionExecutor = new TransitionIssue(null, null, __DIR__  . '/../../../');
         $transitionExecutor->statusTransitionToAutomated($key, 'Open');
         if (isset($test['skip'])) {
             $test += ['key' => $key];
             $transitionExecutor->oneStepStatusTransition($key, 'Skipped');
-            $updateIssue = new UpdateIssue();
+            $updateIssue = new UpdateIssue(null, null, __DIR__  . '/../../../');
             $updateIssue->skipTestLinkIssue($test);
         }
         return $key;

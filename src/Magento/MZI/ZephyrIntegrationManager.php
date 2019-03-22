@@ -82,30 +82,37 @@ class ZephyrIntegrationManager
     /**
      * Total mftf tests
      *
-     * @var string
+     * @var integer
      */
     public static $totalMftf = 0;
 
     /**
      * Total zephyr tests
      *
-     * @var string
+     * @var integer
      */
     public static $totalZephyr = 0;
 
     /**
      * Total created zephyr tests
      *
-     * @var string
+     * @var integer
      */
     public static $totalCreated = 0;
 
     /**
      * Total updated zephyr tests
      *
-     * @var string
+     * @var integer
      */
     public static $totalUpdated = 0;
+
+    /**
+     * Retry count (default to 5)
+     *
+     * @var integer
+     */
+    public static $retryCount = 5;
 
     /**
      * Timestamp for labeling
@@ -166,6 +173,9 @@ class ZephyrIntegrationManager
         $releaseLine = '',
         $pbReleaseLine = ''
     ) {
+        // Set retry count
+        $this->setRetryCount();
+
         // Set timestamp
         self::$timestamp = date("_m-d-Y_H-i-s");
 
@@ -209,6 +219,10 @@ class ZephyrIntegrationManager
         exit(0); // Done
     }
 
+    /**
+     * Parse command line options
+     * @return void
+     */
     private function parseOptions()
     {
         $args = [];
@@ -289,6 +303,7 @@ class ZephyrIntegrationManager
 
     /**
      * Print statistics
+     * @return void
      */
     private function printStats()
     {
@@ -302,6 +317,7 @@ class ZephyrIntegrationManager
 
     /**
      * Print usage
+     * @return void
      */
     private function printUsage()
     {
@@ -311,5 +327,17 @@ class ZephyrIntegrationManager
         print("--project          Jira project key\n");
         print("--releaseLine      Magento release line that mftf tests run on\n");
         print("--pbReleaseLine    Magento Page Builder release line that mftf tests run on\n\n");
+    }
+
+    /**
+     * Set retry count
+     * @return void
+     */
+    private function setRetryCount()
+    {
+        $retryCnt = getenv('RETRY_COUNT');
+        if (isset($retryCnt) && !is_null($retryCnt)) {
+            self::$retryCount = $retryCnt;
+        }
     }
 }
