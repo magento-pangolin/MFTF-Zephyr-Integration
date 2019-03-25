@@ -14,7 +14,7 @@
  *  --pbReleaseLine    Magento Page Builder release line that mftf tests run on
  */
 try {
-    require_once (dirname(__DIR__) . '/magento/vendor/autoload.php');
+    require_once (__DIR__ . '/../../autoload.php');
 
     $env = new \Dotenv\Loader(__DIR__  . '/.env');
     $env->load();
