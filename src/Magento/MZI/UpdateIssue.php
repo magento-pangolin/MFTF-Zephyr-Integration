@@ -202,8 +202,8 @@ class UpdateIssue
 
             $il->setInwardIssue($update['skip'][0])
                 ->setOutwardIssue($update['key'])
-                ->setLinkTypeName('Blocks' )
-                ->setComment('Blocking issue for Skipped test');
+                ->setLinkTypeName('Blocks' );
+                //->setComment('Blocking issue for Skipped test');
 
             if (!ZephyrIntegrationManager::$dryRun) {
                 $ils = new IssueLinkService(null, null, __DIR__  . '/../../../');
