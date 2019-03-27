@@ -8,6 +8,7 @@ namespace Magento\MZI;
 use JiraRestApi\Issue\IssueService;
 use JiraRestApi\JiraException;
 use JiraRestApi\Issue\Transition;
+use Magento\MZI\Util\JiraInfo;
 use Magento\MZI\Util\LoggingUtil;
 
 /**
@@ -29,12 +30,8 @@ class TransitionIssue
         $issueKey = $key;
         $startingStatus = $status;
 
-        //List of all transitions from Open to Automated. Skip transition handled separately
-        $projectMcTransitionStates = [
-            "Open", "In Progress", "Ready for Review", "In Review", "Review Passed", "Automated"
-        ];
-        $currentStatusOffset = array_search($startingStatus, $projectMcTransitionStates);
-        $requiredTransitions = array_slice($projectMcTransitionStates, $currentStatusOffset+1);
+        $currentStatusOffset = array_search($startingStatus, JiraInfo::$transitionStates);
+        $requiredTransitions = array_slice(JiraInfo::$transitionStates, $currentStatusOffset+1);
 
         foreach ($requiredTransitions as $status) {
             $logMessage = "\nSetting " . $issueKey . " To " . $status . "\n";

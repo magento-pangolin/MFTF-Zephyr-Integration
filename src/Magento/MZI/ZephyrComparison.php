@@ -5,6 +5,7 @@
  */
 namespace Magento\MZI;
 
+use Magento\MZI\Util\JiraInfo;
 use Magento\MZI\Util\LoggingUtil;
 
 class ZephyrComparison
@@ -77,8 +78,8 @@ class ZephyrComparison
 	    $this->mftfTests = $mftfTests;
 	    $this->zephyrTests = $zephyrTests;
         foreach ($this->zephyrTests as $key => $zephyrTest) {
-            if (isset($zephyrTest['customfield_14364'])) {
-                $this->zephyrStoryTitle[$key] = $zephyrTest['customfield_14364'] . $zephyrTest['summary'];
+            if (isset($zephyrTest[JiraInfo::JIRA_FIELD_STORIES])) {
+                $this->zephyrStoryTitle[$key] = $zephyrTest[JiraInfo::JIRA_FIELD_STORIES] . $zephyrTest['summary'];
             }
             else {
                 $this->zephyrStoryTitle[$key] = $zephyrTest['summary'];
@@ -246,9 +247,9 @@ class ZephyrComparison
             $logMessage .= "Description comparison failed:\nmftf=" . $mftf . "\nzephyr=\n";
         }
 
-        if (isset($mftfTest['stories']) && isset($zephyrTest['customfield_14364'])) {
+        if (isset($mftfTest['stories']) && isset($zephyrTest[JiraInfo::JIRA_FIELD_STORIES])) {
             $mftf = trim($mftfTest['stories'][0]);
-            $zephyr = trim($zephyrTest['customfield_14364']);
+            $zephyr = trim($zephyrTest[JiraInfo::JIRA_FIELD_STORIES]);
             if (strcasecmp($mftf, $zephyr) != 0) {
                 $this->mismatches[$key]['stories'] = $mftf;
                 $logMessage .= "Stories comparison failed:\nmftf=" . $mftf . "\nzephyr=" . $zephyr ."\n";
@@ -261,8 +262,8 @@ class ZephyrComparison
 
         if (isset($mftfTest['severity'][0])) {
             $mftf = $this->transformSeverity($mftfTest['severity'][0]);
-            if (isset($zephyrTest['customfield_12720'])) {
-                $zephyr = trim($zephyrTest['customfield_12720']['value']);
+            if (isset($zephyrTest[JiraInfo::JIRA_FIELD_SEVERITY])) {
+                $zephyr = trim($zephyrTest[JiraInfo::JIRA_FIELD_SEVERITY]['value']);
                 if (strcasecmp($mftf, $zephyr) != 0) {
                     $this->mismatches[$key]['severity'] = $mftf;
                     $logMessage .= "Severity comparison failed:\nmftf=" . $mftf . "\nzephyr=" . $zephyr ."\n";
@@ -287,19 +288,14 @@ class ZephyrComparison
             $logMessage .= "mftf testCaseId " . $mftfTest['testCaseId'][0] . " is linked to zephyr issue " . $key."\n";
             $logMessage .= "Please update mftf testCaseId in code in release line " . $mftfTest['releaseLine'][0]." \n";
         }
-        // customfield_14362 Group
-        // customfield_14121 Release Line
-        // customfield_14621 Skipped Reason
-        // customfield_13324 Test Type
-        // customfield_14364 Stories
-        // customfield_12720 Severity
-        if (!isset($zephyrTest['customfield_14121'])
-            || $zephyrTest['customfield_14121']['value'] != $mftfTest['releaseLine'][0]) {
+
+        if (!isset($zephyrTest[JiraInfo::JIRA_FIELD_RELEASE_LINE])
+            || $zephyrTest[JiraInfo::JIRA_FIELD_RELEASE_LINE]['value'] != $mftfTest['releaseLine'][0]) {
             $this->mismatches[$key]['release_line'] = $mftfTest['releaseLine'][0];
             $logMessage .= "Release line comparison failed:\nmftf is run from "
                 . $mftfTest['releaseLine'][0]
                 . " zephyr is "
-                . $zephyrTest['customfield_14121']['value']
+                . $zephyrTest[JiraInfo::JIRA_FIELD_RELEASE_LINE]['value']
                 . "\n";
         }
 

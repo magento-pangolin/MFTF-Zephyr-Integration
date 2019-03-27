@@ -336,7 +336,7 @@ class ZephyrIntegrationManager
     private function setRetryCount()
     {
         $retryCnt = getenv('RETRY_COUNT');
-        if (isset($retryCnt) && !is_null($retryCnt)) {
+        if ($retryCnt !== false && !is_null($retryCnt)) {
             self::$retryCount = $retryCnt;
         }
     }
