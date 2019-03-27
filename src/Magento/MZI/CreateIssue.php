@@ -8,6 +8,7 @@ namespace Magento\MZI;
 use JiraRestApi\Issue\IssueService;
 use JiraRestApi\Issue\IssueField;
 use JiraRestApi\JiraException;
+use Magento\MZI\Util\JiraInfo;
 use Magento\MZI\Util\LoggingUtil;
 
 class CreateIssue
@@ -75,12 +76,12 @@ class CreateIssue
         if (isset($test['stories'])) {
             $stories = $test['stories'][0];
             if (!empty($stories)) {
-                $issueField->addCustomField('customfield_14364', $test['stories'][0]);
+                $issueField->addCustomField(JiraInfo::JIRA_FIELD_STORIES, $test['stories'][0]);
             }
         }
-        $issueField->addCustomField('customfield_12720', ['value' => $test['severity'][0]]);
-        $issueField->addCustomField('customfield_13324', ['value' => 'MFTF Test']); // Test Type
-        $issueField->addCustomField('customfield_14121', ['value' => $test['releaseLine'][0]]); // Release Line
+        $issueField->addCustomField(JiraInfo::JIRA_FIELD_SEVERITY, ['value' => $test['severity'][0]]);
+        $issueField->addCustomField(JiraInfo::JIRA_FIELD_TEST_TYPE, ['value' => 'MFTF Test']); // Test Type
+        $issueField->addCustomField(JiraInfo::JIRA_FIELD_RELEASE_LINE, ['value' => $test['releaseLine'][0]]); // Release Line
         $issueField->addLabel(self::CREATE_LABEL . ZephyrIntegrationManager::$timestamp);
 
         $key = '';

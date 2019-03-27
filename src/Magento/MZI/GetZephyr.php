@@ -17,6 +17,11 @@ use Magento\MZI\Util\LoggingUtil;
 class GetZephyr
 {
     /**
+     * The maximum number of issues to return (defaults to 50)
+     */
+    const PAGING_SIZE = 100;
+
+    /**
      * Project Components
      *
      * @var array
@@ -107,10 +112,9 @@ class GetZephyr
             $zephyrIDs = [];
             $issueService = new IssueService(null, null, __DIR__  . '/../../../');
             $startAt = 0;	//the index of the first issue to return (0-based)
-            $maxResult = 100;	// the maximum number of issues to return (defaults to 50).
 
             // first fetch
-            $totalRet = $issueService->search($jql, $startAt, $maxResult);
+            $totalRet = $issueService->search($jql, $startAt, self::PAGING_SIZE);
             $totalCount = $totalRet->total; // the total number of issues to return
             ZephyrIntegrationManager::$totalZephyr = $totalCount;
             print ("Total zephyr tests: $totalCount\n");
@@ -124,10 +128,10 @@ class GetZephyr
             }
 
             // fetch remaining data
-            for ($startAt = $maxResult; $startAt < $totalCount; $startAt+=$maxResult) {
+            for ($startAt = self::PAGING_SIZE; $startAt < $totalCount; $startAt+=self::PAGING_SIZE) {
                 print ("\nPaging starts at $startAt\n");
                 print ("-------------------------------\n");
-                $ret = $issueService->search($jql, $startAt, $maxResult);
+                $ret = $issueService->search($jql, $startAt, self::PAGING_SIZE);
                 $data = $this->object_to_array_recursive($ret);
                 foreach ($data['issues'] as $k) {
                     $zephyrIDs[$k['key']] = $k['fields']; // creates array of [1001 : MC-01, 1002 : MC-02]

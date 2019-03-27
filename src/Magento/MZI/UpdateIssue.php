@@ -11,6 +11,7 @@ use JiraRestApi\JiraException;
 use JiraRestApi\Issue\Transition;
 use JiraRestApi\IssueLink\IssueLink;
 use JiraRestApi\IssueLink\IssueLinkService;
+use Magento\MZI\Util\JiraInfo;
 use Magento\MZI\Util\LoggingUtil;
 
 /**
@@ -164,17 +165,17 @@ class UpdateIssue
         }
 
         if (isset($update['stories']) && !empty($update['stories'])) {
-            $issueField->addCustomField('customfield_14364', $update['stories']);
+            $issueField->addCustomField(JiraInfo::JIRA_FIELD_STORIES, $update['stories']);
             $this->updatedFields .= "stories = " . $update['stories'] . "\n";
         }
 
         if (isset($update['severity'])) {
-            $issueField->addCustomField('customfield_12720', ['value' => $update['severity']]);
+            $issueField->addCustomField(JiraInfo::JIRA_FIELD_SEVERITY, ['value' => $update['severity']]);
             $this->updatedFields .= "severity = " . $update['severity'] . "\n";
         }
 
         if (isset($update['release_line'])) {
-            $issueField->addCustomField('customfield_14121', ['value' => $update['release_line']]);
+            $issueField->addCustomField(JiraInfo::JIRA_FIELD_RELEASE_LINE, ['value' => $update['release_line']]);
             $this->updatedFields .= "release line = " . $update['release_line'] . "\n";
         }
 
