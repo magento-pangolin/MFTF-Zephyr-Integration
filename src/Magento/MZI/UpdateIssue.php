@@ -270,8 +270,10 @@ class UpdateIssue
                     . " Tries, Still Getting JIRA Exception: "
                     . $e->getMessage()
                 );
-                print("\nExiting With Code 1\n");
-                exit(1);
+                // Will not exit for linking errors
+                print("\nReport error and continue...\n");
+                //print("\nExiting With Code 1\n");
+                //exit(1);
             }
         }
     }
