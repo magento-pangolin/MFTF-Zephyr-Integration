@@ -77,6 +77,9 @@ class ZephyrComparison
     {
 	    $this->mftfTests = $mftfTests;
 	    $this->zephyrTests = $zephyrTests;
+	    if (empty($zephyrTests)) {
+            $this->zephyrStoryTitle = [];
+        }
         foreach ($this->zephyrTests as $key => $zephyrTest) {
             if (isset($zephyrTest[JiraInfo::JIRA_FIELD_STORIES])) {
                 $this->zephyrStoryTitle[$key] = $zephyrTest[JiraInfo::JIRA_FIELD_STORIES] . $zephyrTest['summary'];
@@ -118,11 +121,18 @@ class ZephyrComparison
      */
     public function matchOnIdOrName()
     {
+        if (empty($this->mftfTests)) {
+            print("\nNo MFTF test found. Exiting With Code 1\n");
+            LoggingUtil::getInstance()->getLogger(ZephyrComparison::class)->warn(
+                "\nNo MFTF test found. Exiting With Code 1\n"
+            );
+            exit(1);
+        }
 	    foreach ($this->mftfTests as $mftfTestName => $mftfTest) {
 	        // Set release line for the mftf test
             $mftfTest['releaseLine'][] = $this->getReleaseLine($mftfTest);
 	        if (isset($mftfTest['testCaseId'])) {
-	            if (array_key_exists($mftfTest['testCaseId'][0], $this->zephyrTests)) {
+	            if (!empty($this->zephyrTests) && array_key_exists($mftfTest['testCaseId'][0], $this->zephyrTests)) {
                     $this->idCompare($mftfTestName, $mftfTest);
                 } else {
                     LoggingUtil::getInstance()->getLogger(ZephyrComparison::class)->warn(
@@ -174,18 +184,23 @@ class ZephyrComparison
                 $mftfTest['stories'][] = '';
             }
             $mftfStoryTitle = $mftfTest['stories'][0] . $mftfTest['title'][0];
-            $storyTitleMatch = array_search($mftfStoryTitle, $this->zephyrStoryTitle);
-            if ($storyTitleMatch !== false) {
-                // MFTF StoryTitle found a match in Zephyr, send test to comparison processing and add it to update array
-                $this->testDataComparison(
-                    $mftfTestName,
-                    $mftfTest,
-                    $this->zephyrTests[$storyTitleMatch],
-                    $storyTitleMatch
-                );
-                $this->updateByName[] = $mftfTest; // TODO update which key by name ???
+            $matched = false;
+            if (!empty($this->zephyrStoryTitle)) {
+                $storyTitleMatch = array_search($mftfStoryTitle, $this->zephyrStoryTitle);
+                if ($storyTitleMatch !== false) {
+                    $matched = true;
+                    // MFTF StoryTitle found a match in Zephyr, send test to comparison processing and add it to update array
+                    $this->testDataComparison(
+                        $mftfTestName,
+                        $mftfTest,
+                        $this->zephyrTests[$storyTitleMatch],
+                        $storyTitleMatch
+                    );
+                    $this->updateByName[] = $mftfTest;
+                }
             }
-            else {
+
+            if (!$matched) {
                 // MFTF StoryTitle match is not found, add test to create array
                 if (isset($mftfTest['severity'])) {
                     $mftfTest['severity'][0] = $this->transformSeverity($mftfTest['severity'][0]);
@@ -195,8 +210,13 @@ class ZephyrComparison
         }
         else {
             $mftfLoggingDescriptor = self::mftfLoggingDescriptor($mftfTest);
+            print(
+                "\nMFTF TEST MISSING TITLE ANNOTATION: "
+                . $mftfLoggingDescriptor
+                . " No integration will be performed.\n"
+            );
             LoggingUtil::getInstance()->getLogger(ZephyrComparison::class)->warn(
-                'MFTF TEST MISSING TITLE ANNOTATION: ' . $mftfLoggingDescriptor . ' No integration will be performed.'
+                "\nMFTF TEST MISSING TITLE ANNOTATION: " . $mftfLoggingDescriptor . " No integration will be performed.\n"
             );
         }
     }
