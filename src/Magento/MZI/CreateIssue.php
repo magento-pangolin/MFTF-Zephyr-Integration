@@ -188,16 +188,19 @@ class CreateIssue
     private function getZephyrComponentName($feature)
     {
         $components = GetZephyr::getInstance()->getComponentsForProject();
+        // Exact match of module name first
         foreach ($components as $component) {
             if (stripos($component, 'Module/ ' . $feature) !== false) {
                 return $component;
             }
         }
-        foreach ($components as $component) {
-            if (stripos($feature, substr($component, 8)) !== false) {
+        // Match by keyword
+        foreach (JiraInfo::$keywordToComponentMap as $key => $component) {
+            if (stripos($feature, $key) !== false) {
                 return $component;
             }
         }
+        // Set to default
         return 'Module/ Backend';
     }
 }

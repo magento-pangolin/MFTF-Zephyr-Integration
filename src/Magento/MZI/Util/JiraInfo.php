@@ -24,4 +24,12 @@ class JiraInfo
     public static $transitionStates = [
         "Open", "In Progress", "Ready for Review", "In Review", "Review Passed", "Automated"
     ];
+
+    /**
+     * keyword to component map (only used when exact name match is not found)
+     */
+    public static $keywordToComponentMap = [
+        "pagebuilder" => "Module/ PageBuilder",
+
+    ];
 }
