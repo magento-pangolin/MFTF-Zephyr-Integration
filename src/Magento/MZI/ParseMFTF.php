@@ -149,14 +149,9 @@ class ParseMFTF
                 );
             }
 
-            $featureGroups = [];
-            if (isset($annotation['feature'])) {
-                $featureGroups[] = $annotation['feature'];
+            if (isset($annotation['features'])) {
+                $this->updateFlags($annotation['features']);
             }
-            if (isset($annotation['group'])) {
-                $featureGroups = array_merge($featureGroups, $annotation['group']);
-            }
-            $this->updateFlags($featureGroups);
         }
 
         if (!$this->validateAllFlags()) {
@@ -173,20 +168,20 @@ class ParseMFTF
     /**
      * Update flags
      *
-     * @param array $featureGroups
+     * @param array $features
      * @return void
      */
-    private function updateFlags(array $featureGroups)
+    private function updateFlags(array $features)
     {
         if ($this->validateAllFlags()) {
             return;
         }
 
-        foreach ($featureGroups as $fg) {
+        foreach ($features as $feature) {
             $found = false;
             if (self::$flags['ce'] == 0) {
                 foreach (self::$keywordsCe as $keyword) {
-                    if (strpos(strtolower($fg), $keyword) !== false) {
+                    if (strpos(strtolower($feature), $keyword) !== false) {
                         self::$flags['ce'] = 1;
                         $found = true;
                         break;
@@ -196,7 +191,7 @@ class ParseMFTF
 
             if (self::$flags['ee'] == 0 && !$found) {
                 foreach (self::$keywordsEe as $keyword) {
-                    if (strpos(strtolower($fg), $keyword) !== false) {
+                    if (strpos(strtolower($feature), $keyword) !== false) {
                         self::$flags['ee'] = 1;
                         $found = true;
                         break;
@@ -206,7 +201,7 @@ class ParseMFTF
 
             if (self::$flags['b2b'] == 0 && !$found) {
                 foreach (self::$keywordsB2b as $keyword) {
-                    if (strpos(strtolower($fg), $keyword) !== false) {
+                    if (strpos(strtolower($feature), $keyword) !== false) {
                         self::$flags['b2b'] = 1;
                         $found = true;
                         break;
@@ -217,7 +212,7 @@ class ParseMFTF
             // Check page builder ee first
             if (self::$flags['pbee'] == 0 && !$found) {
                 foreach (self::$keywordsPbEe as $keyword) {
-                    if (strpos(strtolower($fg), $keyword) !== false) {
+                    if (strpos(strtolower($feature), $keyword) !== false) {
                         self::$flags['pbee'] = 1;
                         $found = true;
                         break;
@@ -227,7 +222,7 @@ class ParseMFTF
 
             if (self::$flags['pb'] == 0 && !$found) {
                 foreach (self::$keywordsPb as $keyword) {
-                    if (strpos(strtolower($fg), $keyword) !== false) {
+                    if (strpos(strtolower($feature), $keyword) !== false) {
                         self::$flags['pb'] = 1;
                         $found = true;
                         break;
