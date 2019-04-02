@@ -295,7 +295,7 @@ class ZephyrComparison
         }
 
         if ((isset($mftfTest['skip'])) && trim(($zephyrTest['status']['name']) != "Skipped")) {
-            $this->mismatches[$key]['skip'] = $mftfTest['skip'][0];
+            $this->mismatches[$key]['skip'] = $mftfTest['skip'];
             $logMessage .= "Automation Status comparison failed:\nmftf is \"Skipped\" zephyr is NOT \"Skipped\"\n";
         }
 
