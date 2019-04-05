@@ -201,6 +201,6 @@ class CreateIssue
             }
         }
         // Set to default
-        return 'Module/ Backend';
+        return 'Other';
     }
 }
