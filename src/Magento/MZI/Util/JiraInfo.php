@@ -19,6 +19,20 @@ class JiraInfo
     const JIRA_FIELD_GROUP = "customfield_14362";
 
     /**
+     * Jira issuelinks field
+     */
+    const JIRA_FIELD_ISSUE_LINKS = "issuelinks";
+    const JIRA_FIELD_INWARD_ISSUE = "inwardIssue";
+    const JIRA_FIELD_INWARD = "inward";
+    const JIRA_FIELD_OUTWARD_ISSUE = "outwardIssue";
+    const JIRA_FIELD_OUTWARD = "outward";
+
+    /**
+     * Jira test type for mftf
+     */
+    const JIRA_TEST_TYPE_MFTF = "MFTF Test";
+
+    /**
      * List of all transitions from Open to Automated. Skip transition handled separately
      */
     public static $transitionStates = [

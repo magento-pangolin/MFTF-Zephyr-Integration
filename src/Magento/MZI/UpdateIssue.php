@@ -31,6 +31,11 @@ class UpdateIssue
     const NOTE_FOR_UPDATE = "\nUpdated by mftf zephyr integration from test: ";
 
     /**
+     * Label for no match issue
+     */
+    const NO_MATCH_LABEL = 'mzi_no_match';
+
+    /**
      * Updated fields as a concatenated string
      *
      * @var string
@@ -50,7 +55,7 @@ class UpdateIssue
     {
         /** Updated fields:
          *
-         * summary, description, stories, severity, status, label, release line, ? test type
+         * summary, description, stories, severity, status, label, test type
          *
          * - add mzi_updated label if it does not exist previously
          * - description + test name
@@ -95,7 +100,7 @@ class UpdateIssue
                     print(
                         "While Processing "
                         . $logMessage
-                        . "After "
+                        . " After "
                         . ZephyrIntegrationManager::$retryCount
                         . " Tries, Still Getting JIRA Exception: "
                         . $e->getMessage()
@@ -103,7 +108,7 @@ class UpdateIssue
                     LoggingUtil::getInstance()->getLogger(UpdateIssue::class)->info(
                         "While Processing "
                         . $logMessage
-                        . "After "
+                        . " After "
                         . ZephyrIntegrationManager::$retryCount
                         . " Tries, Still Getting JIRA Exception: "
                         . $e->getMessage()
@@ -131,6 +136,106 @@ class UpdateIssue
         if (isset($update['unskip'])) {
             $transitionExecutor->oneStepStatusTransition($update['key'], "Automated");
         }
+    }
+
+    /**
+     * Label unmatched zephyr issue by key
+     *
+     * @param array $zephyrTest
+     * @param string $key
+     *
+     * @return void
+     * @throws \Exception
+     */
+    public function labelIssueREST(array $zephyrTest, $key)
+    {
+        $issueField = new IssueField(null, null, __DIR__  . '/../../../');
+
+        foreach ($zephyrTest['labels'] as $label) {
+            $issueField->addLabel($label);
+        }
+        if (in_array(self::NO_MATCH_LABEL . ZephyrIntegrationManager::$timestamp, $zephyrTest['labels']) === false) {
+            $issueField->addLabel(self::NO_MATCH_LABEL . ZephyrIntegrationManager::$timestamp);
+        }
+
+        $logMessage = "\nAdding Unmatched Label for Test: $key\n";
+        $logMessage .= "Summary: " . $zephyrTest['summary'] . "\n";
+        $logMessage .= "Stories: ";
+        if (isset($zephyrTest[JiraInfo::JIRA_FIELD_STORIES])) {
+            $logMessage .= $zephyrTest[JiraInfo::JIRA_FIELD_STORIES];
+        }
+        $logMessage .= "\n";
+
+        $logMessage .= "Release Line: ";
+        if (isset($zephyrTest[JiraInfo::JIRA_FIELD_RELEASE_LINE])) {
+            $logMessage .= $zephyrTest[JiraInfo::JIRA_FIELD_RELEASE_LINE]['value'];
+        }
+        $logMessage .= "\n";
+
+        $logMessage .= "Status: " . $zephyrTest['status']['name']. "\n";
+        $logMessage .= $this->getLinkedIssues($zephyrTest);
+
+        $logMessage .= "Labels: ";
+        if (isset($zephyrTest['labels'])) {
+            $logMessage .= implode(',', $zephyrTest['labels']);
+        }
+        $logMessage .= "\n";
+
+        $time_start = microtime(true);
+        if (!ZephyrIntegrationManager::$dryRun) {
+            try {
+                $issueService = new IssueService(null, null, __DIR__  . '/../../../');
+                $response = $issueService->update($key, $issueField);
+                $time_end = microtime(true);
+                $time = $time_end - $time_start;
+                $logMessage .= "Completed In $time Seconds\n";
+            } catch (JiraException $e) {
+                print("\nException Occurs In JIRA update(). " . $e->getMessage());
+                LoggingUtil::getInstance()->getLogger(UpdateIssue::class)->info(
+                    "\nException Occurs In JIRA update(). " . $e->getMessage()
+                );
+                $success = false;
+                for ($i = 0; $i < ZephyrIntegrationManager::$retryCount; $i++) {
+                    print("\nRetry # $i...\n");
+                    LoggingUtil::getInstance()->getLogger(UpdateIssue::class)->info("\nRetry # $i...\n");
+                    try {
+                        $issueService = new IssueService(null, null, __DIR__  . '/../../../');
+                        $issueService->update($key, $issueField);
+                        $time_end = microtime(true);
+                        $time = $time_end - $time_start;
+                        $logMessage .= "Completed In $time Seconds\n";
+                        $success = true;
+                        break;
+                    } catch (JiraException $e2) {
+                        $e = $e2;
+                    }
+                }
+                if (!$success) {
+                    print(
+                        "While Processing "
+                        . $logMessage
+                        . " After "
+                        . ZephyrIntegrationManager::$retryCount
+                        . " Tries, Still Getting JIRA Exception: "
+                        . $e->getMessage()
+                    );
+                    LoggingUtil::getInstance()->getLogger(UpdateIssue::class)->info(
+                        "While Processing "
+                        . $logMessage
+                        . " After "
+                        . ZephyrIntegrationManager::$retryCount
+                        . " Tries, Still Getting JIRA Exception: "
+                        . $e->getMessage()
+                    );
+                    print("\nExiting With Code 1\n");
+                    exit(1);
+                }
+            }
+        } else {
+            $logMessage = "Dry Run... $logMessage" . "Completed!\n\n";
+        }
+        print($logMessage);
+        LoggingUtil::getInstance()->getLogger(UpdateIssue::class)->info($logMessage);
     }
 
     /**
@@ -174,9 +279,9 @@ class UpdateIssue
             $this->updatedFields .= "severity = " . $update['severity'] . "\n";
         }
 
-        if (isset($update['release_line'])) {
-            $issueField->addCustomField(JiraInfo::JIRA_FIELD_RELEASE_LINE, ['value' => $update['release_line']]);
-            $this->updatedFields .= "release line = " . $update['release_line'] . "\n";
+        if (isset($update['test_type'])) {
+            $issueField->addCustomField(JiraInfo::JIRA_FIELD_TEST_TYPE, ['value' => $update['test_type']]);
+            $this->updatedFields .= "test type = " . $update['test_type'] . "\n";
         }
 
         foreach ($update['labels'] as $label) {
@@ -258,7 +363,7 @@ class UpdateIssue
                     print(
                         "While Processing "
                         . $logMessage
-                        . "After "
+                        . " After "
                         . ZephyrIntegrationManager::$retryCount
                         . " Tries, Still Getting JIRA Exception: "
                         . $e->getMessage()
@@ -266,7 +371,7 @@ class UpdateIssue
                     LoggingUtil::getInstance()->getLogger(UpdateIssue::class)->info(
                         "While Processing "
                         . $logMessage
-                        . "After "
+                        . " After "
                         . ZephyrIntegrationManager::$retryCount
                         . " Tries, Still Getting JIRA Exception: "
                         . $e->getMessage()
@@ -278,5 +383,36 @@ class UpdateIssue
                 }
             }
         }
+    }
+
+    /**
+     * Return information for all linked issues for a test
+     *
+     * @param array $test
+     *
+     * @return string
+     * @throws \Exception
+     */
+    private function getLinkedIssues(array $test)
+    {
+        $linkInfo = "Issues linked:\n";
+        if (!isset($test[JiraInfo::JIRA_FIELD_ISSUE_LINKS])) {
+            return $linkInfo;
+        }
+        for ($i = 0; $i < count($test[JiraInfo::JIRA_FIELD_ISSUE_LINKS]); $i++) {
+            $link = $test[JiraInfo::JIRA_FIELD_ISSUE_LINKS][$i];
+            $linkInfo .= "#" . strval($i+1) . ":\n";
+
+            if (isset($link[JiraInfo::JIRA_FIELD_INWARD_ISSUE])) {
+                $linkInfo .= "Inward Issue = " . $link[JiraInfo::JIRA_FIELD_INWARD_ISSUE]['key'] . " ";
+                $linkInfo .= "Issue Type = " . $link['type'][JiraInfo::JIRA_FIELD_INWARD] . "\n";
+            }
+
+            if (isset($link[JiraInfo::JIRA_FIELD_OUTWARD_ISSUE])) {
+                $linkInfo .= "Outward Issue = " . $link[JiraInfo::JIRA_FIELD_OUTWARD_ISSUE]['key'] . " ";
+                $linkInfo .= "Issue Type = " . $link['type'][JiraInfo::JIRA_FIELD_OUTWARD] . "\n";
+            }
+        }
+        return $linkInfo;
     }
 }

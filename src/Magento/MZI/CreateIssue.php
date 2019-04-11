@@ -121,7 +121,7 @@ class CreateIssue
                     print(
                         "While Processing "
                         . $logMessage
-                        . "After "
+                        . " After "
                         . ZephyrIntegrationManager::$retryCount
                         . " Tries, Still Getting JIRA Exception: "
                         . $e->getMessage()
@@ -129,7 +129,7 @@ class CreateIssue
                     LoggingUtil::getInstance()->getLogger(CreateIssue::class)->info(
                         "While Processing "
                         . $logMessage
-                        . "After "
+                        . " After "
                         . ZephyrIntegrationManager::$retryCount
                         . " Tries, Still Getting JIRA Exception: "
                         . $e->getMessage()

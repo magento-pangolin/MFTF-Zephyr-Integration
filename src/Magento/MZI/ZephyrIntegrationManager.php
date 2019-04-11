@@ -108,6 +108,20 @@ class ZephyrIntegrationManager
     public static $totalUpdated = 0;
 
     /**
+     * Total matched zephyr tests
+     *
+     * @var integer
+     */
+    public static $totalMatched = 0;
+
+    /**
+     * Total unmatched zephyr tests
+     *
+     * @var integer
+     */
+    public static $totalUnmatched = 0;
+
+    /**
      * Retry count (default to 5)
      *
      * @var integer
@@ -211,9 +225,11 @@ class ZephyrIntegrationManager
         $zephyrComparison->matchOnIdOrName();
         $toBeCreatedTests = $zephyrComparison->getCreateArrayByName();
         $toBeUpdatedTests = $zephyrComparison->getUpdateArray();
+        $unmatchedTests = $zephyrComparison->getUnmatchedZephyrTests();
 
         CreateManager::getInstance()->performCreateOperations($toBeCreatedTests);
         UpdateManager::getInstance()->performUpdateOperations($toBeUpdatedTests);
+        UpdateManager::getInstance()->performCleanupOperations($unmatchedTests);
 
         $this->printStats();
         exit(0); // Done
@@ -307,12 +323,15 @@ class ZephyrIntegrationManager
      */
     private function printStats()
     {
-        print("\n\n=========================================================\n");
-        print("Total Zephyr Tests Found by JQL:                  " . self::$totalZephyr . "\n");
-        print("Total MFTF Tests Run:                             " . self::$totalMftf . "\n");
-        print("Total New Zephyr Tests Created by Integration:    " . self::$totalCreated . "\n");
-        print("Total Zephyr Tests Updated by Integration:        " . self::$totalUpdated . "\n");
-        print("=========================================================\n\n");
+        print("\n\n===================================================\n");
+        print("Total Zephyr Tests Retrieved from JIRA:     " . self::$totalZephyr . "\n");
+        print("Total MFTF Tests Read from Code:            " . self::$totalMftf . "\n");
+        print("---------------------------------------------------\n");
+        print("Total Zephyr Tests Created:                 " . self::$totalCreated . "\n");
+        print("Total Zephyr Tests Updated:                 " . self::$totalUpdated . "\n");
+        print("Total Zephyr Tests Matched:                 " . self::$totalMatched . "\n");
+        print("Total Zephyr Tests Unmatched:               " . self::$totalUnmatched . "\n");
+        print("===================================================\n\n");
     }
 
     /**

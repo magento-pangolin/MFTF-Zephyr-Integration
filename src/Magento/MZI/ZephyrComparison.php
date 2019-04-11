@@ -11,7 +11,18 @@ use Magento\MZI\Util\LoggingUtil;
 class ZephyrComparison
 {
     /**
-     * 2d array of MFTF tests from ParseMFTF class
+     * Zephyr test process status key
+     */
+    const MZI_STATUS_KEY = "mzi_status";
+    /**
+     * Zephyr test process status values
+     */
+    const MZI_STATUS_VALUE_NO_MATCH = "NOMATCH";
+    const MZI_STATUS_VALUE_MATCHED = "MATCHED";
+    const MZI_STATUS_VALUE_UPDATED = "UPDATED";
+
+    /**
+     * array of MFTF tests from ParseMFTF class
      *
      * @var array
      */
@@ -81,11 +92,13 @@ class ZephyrComparison
             $this->zephyrStoryTitle = [];
         }
         foreach ($this->zephyrTests as $key => $zephyrTest) {
+            $this->zephyrTests[$key][self::MZI_STATUS_KEY] = self::MZI_STATUS_VALUE_NO_MATCH;
+	        $title = trim($zephyrTest['summary']);
             if (isset($zephyrTest[JiraInfo::JIRA_FIELD_STORIES])) {
-                $this->zephyrStoryTitle[$key] = $zephyrTest[JiraInfo::JIRA_FIELD_STORIES] . $zephyrTest['summary'];
+                $this->zephyrStoryTitle[$key] = trim($zephyrTest[JiraInfo::JIRA_FIELD_STORIES]) . $title;
             }
             else {
-                $this->zephyrStoryTitle[$key] = $zephyrTest['summary'];
+                $this->zephyrStoryTitle[$key] = $title;
             }
         }
     }
@@ -129,17 +142,17 @@ class ZephyrComparison
             exit(1);
         }
 	    foreach ($this->mftfTests as $mftfTestName => $mftfTest) {
-	        // Set release line for the mftf test
+	        // Set Release Line for the mftf test
             $mftfTest['releaseLine'][] = $this->getReleaseLine($mftfTest);
 	        if (isset($mftfTest['testCaseId'])) {
 	            if (!empty($this->zephyrTests) && array_key_exists($mftfTest['testCaseId'][0], $this->zephyrTests)) {
+	                $this->zephyrTests[$mftfTest['testCaseId'][0]][self::MZI_STATUS_KEY] = self::MZI_STATUS_VALUE_MATCHED;
                     $this->idCompare($mftfTestName, $mftfTest);
                 } else {
                     LoggingUtil::getInstance()->getLogger(ZephyrComparison::class)->warn(
                         'TestCaseId '
                         . $mftfTest['testCaseId'][0]
-                        . ' exists in MFTF but can not be found in Zephyr MC project. '
-                        . 'Integration will try to match by story & title combination.'
+                        . ' exists in MFTF but can not be found in Zephyr MC project.'
                     );
                     $this->storyTitleCompare($mftfTestName, $mftfTest);
                 }
@@ -148,6 +161,8 @@ class ZephyrComparison
 	            $this->storyTitleCompare($mftfTestName, $mftfTest);
             }
         }
+        ZephyrIntegrationManager::$totalMatched = count($this->getMatchedZephyrTests());
+        ZephyrIntegrationManager::$totalUnmatched = count($this->getUnmatchedZephyrTests());
     }
 
     /**
@@ -161,6 +176,9 @@ class ZephyrComparison
      */
     private function idCompare($mftfTestName, array $mftfTest)
     {
+        LoggingUtil::getInstance()->getLogger(ZephyrComparison::class)->warn(
+            "TestCaseId " . $mftfTest['testCaseId'][0] . " matched. Comparing data...\n"
+        );
         $mftfTestCaseId = $mftfTest['testCaseId'][0];
         // MFTF testCaseID found a match in Zephyr, send test to comparison processing and add it to update array
         $this->testDataComparison($mftfTestName, $mftfTest, $this->zephyrTests[$mftfTestCaseId], $mftfTestCaseId);
@@ -177,38 +195,7 @@ class ZephyrComparison
      */
     private function storyTitleCompare($mftfTestName, array $mftfTest)
     {
-        if (isset($mftfTest['title'])) {
-            // Set 'stories' to empty string when MFTF test does not set 'stories'
-            if (!isset($mftfTest['stories'])) {
-                $mftfTest['stories']  = [];
-                $mftfTest['stories'][] = '';
-            }
-            $mftfStoryTitle = $mftfTest['stories'][0] . $mftfTest['title'][0];
-            $matched = false;
-            if (!empty($this->zephyrStoryTitle)) {
-                $storyTitleMatch = array_search($mftfStoryTitle, $this->zephyrStoryTitle);
-                if ($storyTitleMatch !== false) {
-                    $matched = true;
-                    // MFTF StoryTitle found a match in Zephyr, send test to comparison processing and add it to update array
-                    $this->testDataComparison(
-                        $mftfTestName,
-                        $mftfTest,
-                        $this->zephyrTests[$storyTitleMatch],
-                        $storyTitleMatch
-                    );
-                    $this->updateByName[] = $mftfTest;
-                }
-            }
-
-            if (!$matched) {
-                // MFTF StoryTitle match is not found, add test to create array
-                if (isset($mftfTest['severity'])) {
-                    $mftfTest['severity'][0] = $this->transformSeverity($mftfTest['severity'][0]);
-                }
-                $this->createArrayByName[$mftfTestName] = $mftfTest;
-            }
-        }
-        else {
+        if (!isset($mftfTest['title']) || empty(trim($mftfTest['title'][0]))) {
             $mftfLoggingDescriptor = self::mftfLoggingDescriptor($mftfTest);
             print(
                 "\nMFTF TEST MISSING TITLE ANNOTATION: "
@@ -218,7 +205,42 @@ class ZephyrComparison
             LoggingUtil::getInstance()->getLogger(ZephyrComparison::class)->warn(
                 "\nMFTF TEST MISSING TITLE ANNOTATION: " . $mftfLoggingDescriptor . " No integration will be performed.\n"
             );
+            return;
         }
+
+        // Set 'Stories' to empty string when MFTF test does not set 'Stories'
+        if (!isset($mftfTest['stories'])) {
+            $mftfTest['stories']  = [];
+            $mftfTest['stories'][] = '';
+        }
+        $mftfStoryTitle = trim($mftfTest['stories'][0]) . trim($mftfTest['title'][0]);
+
+        $storyTitleMatch = array_search($mftfStoryTitle, $this->zephyrStoryTitle);
+        if ($storyTitleMatch !== false) {
+            // MFTF StoryTitle found a match in Zephyr, Comparing Release Line
+            $this->zephyrTests[$storyTitleMatch][self::MZI_STATUS_KEY] = self::MZI_STATUS_VALUE_MATCHED;
+            LoggingUtil::getInstance()->getLogger(ZephyrComparison::class)->warn(
+                "Stories+Title matched, comparing Release Line...\n"
+            );
+            if (!isset($this->zephyrTests[$storyTitleMatch][JiraInfo::JIRA_FIELD_RELEASE_LINE])
+                || $this->zephyrTests[$storyTitleMatch][JiraInfo::JIRA_FIELD_RELEASE_LINE]['value'] == $mftfTest['releaseLine'][0]) {
+                // Release line matched or Zephyr test does not have Release Line set, add test to update array
+                $this->testDataComparison(
+                    $mftfTestName,
+                    $mftfTest,
+                    $this->zephyrTests[$storyTitleMatch],
+                    $storyTitleMatch
+                );
+                $this->updateByName[] = $mftfTest;
+                return;
+            }
+        }
+
+        // Add test to create array
+        if (isset($mftfTest['severity'])) {
+            $mftfTest['severity'][0] = $this->transformSeverity($mftfTest['severity'][0]);
+        }
+        $this->createArrayByName[$mftfTestName] = $mftfTest;
     }
 
     /**
@@ -309,17 +331,15 @@ class ZephyrComparison
             $logMessage .= "Please update mftf testCaseId in code in release line " . $mftfTest['releaseLine'][0]." \n";
         }
 
-        if (!isset($zephyrTest[JiraInfo::JIRA_FIELD_RELEASE_LINE])
-            || $zephyrTest[JiraInfo::JIRA_FIELD_RELEASE_LINE]['value'] != $mftfTest['releaseLine'][0]) {
-            $this->mismatches[$key]['release_line'] = $mftfTest['releaseLine'][0];
-            $logMessage .= "Release line comparison failed:\nmftf is run from "
-                . $mftfTest['releaseLine'][0]
-                . " zephyr is "
-                . $zephyrTest[JiraInfo::JIRA_FIELD_RELEASE_LINE]['value']
-                . "\n";
+        if ($zephyrTest[JiraInfo::JIRA_FIELD_TEST_TYPE]['value'] != JiraInfo::JIRA_TEST_TYPE_MFTF) {
+            $mftf = JiraInfo::JIRA_TEST_TYPE_MFTF;
+            $zephyr = $zephyrTest[JiraInfo::JIRA_FIELD_TEST_TYPE]['value'];
+            $this->mismatches[$key]['test_type'] = $mftf;
+            $logMessage .= "Test Type comparison failed:\nmftf=" . $mftf . "\nzephyr=" . $zephyr ."\n";
         }
 
         if (isset($this->mismatches[$key])) {
+            $this->zephyrTests[$key][self::MZI_STATUS_KEY] = self::MZI_STATUS_VALUE_UPDATED;
             // Save description as we will always update it
             if (!isset($this->mismatches[$key]['description'] )) {
                 $this->mismatches[$key]['description'] = trim($mftfTest['description'][0]);
@@ -379,6 +399,40 @@ class ZephyrComparison
     public function getUpdateArray()
     {
         return $this->mismatches;
+    }
+
+    /**
+     * getter for unmatched Zephyr tests
+     *
+     * @return array
+     */
+    public function getUnmatchedZephyrTests()
+    {
+        $unmatched = [];
+        foreach ($this->zephyrTests as $key => $test) {
+            if ($test[self::MZI_STATUS_KEY] == self::MZI_STATUS_VALUE_NO_MATCH
+                && $test[JiraInfo::JIRA_FIELD_TEST_TYPE]['value'] == JiraInfo::JIRA_TEST_TYPE_MFTF) {
+                $unmatched[$key] = $test;
+            }
+        }
+        return $unmatched;
+    }
+
+    /**
+     * private getter for matched Zephyr tests
+     *
+     * @return array
+     */
+    private function getMatchedZephyrTests()
+    {
+        $matched = [];
+        foreach ($this->zephyrTests as $key => $test) {
+            if ($test[self::MZI_STATUS_KEY] == self::MZI_STATUS_VALUE_MATCHED
+                || $test[self::MZI_STATUS_KEY] == self::MZI_STATUS_VALUE_UPDATED) {
+                $matched[$key] = $test;
+            }
+        }
+        return $matched;
     }
 
     /**

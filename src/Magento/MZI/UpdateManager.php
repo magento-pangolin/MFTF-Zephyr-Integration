@@ -59,4 +59,26 @@ class UpdateManager
         ZephyrIntegrationManager::$totalUpdated = $count;
         print("\n\nTotal Zephyr Tests Updated: $count\n\n");
     }
+
+    /**
+     * Manages labeling unmatched Zephyr tests
+     *
+     * @param array $unmatchedTests
+     *
+     * @return void
+     * @throws \Exception
+     */
+    public function performCleanupOperations($unmatchedTests)
+    {
+        $count = 0;
+        $total = count($unmatchedTests);
+        print("\n\nTotal Unmatched Zephyr Tests To Be Labeled: $total\n\n");
+        foreach ($unmatchedTests as $key => $test) {
+            $updateIssue = new UpdateIssue();
+            $updateIssue->labelIssueREST($test, $key);
+            $count += 1;
+            print("\nUnmatched Zephyr Tests Labeled: $count" . "/" . "$total\n\n");
+        }
+        print("\n\nTotal Unmatched Zephyr Tests Labeled: $count\n\n");
+    }
 }
