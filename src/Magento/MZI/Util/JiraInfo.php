@@ -33,6 +33,12 @@ class JiraInfo
     const JIRA_TEST_TYPE_MFTF = "MFTF Test";
 
     /**
+     * Jira labels
+     */
+    const JIRA_LABEL_MTF_TO_MFTF = "mtf-to-mftf";
+    const JIRA_LABEL_PWA = "PWA";
+
+    /**
      * List of all transitions from Open to Automated. Skip transition handled separately
      */
     public static $transitionStates = [

@@ -122,6 +122,42 @@ class ZephyrIntegrationManager
     public static $totalUnmatched = 0;
 
     /**
+     * Total unmatched PWA zephyr tests
+     *
+     * @var integer
+     */
+    public static $totalUnmatchedPwa = 0;
+
+
+    /**
+     * Total unmatched Page Builder zephyr tests
+     *
+     * @var integer
+     */
+    public static $totalUnmatchedPageBuilder = 0;
+
+    /**
+     * Total unmatched skipped due to mtf zephyr tests
+     *
+     * @var integer
+     */
+    public static $totalUnmatchedSkippedMtf = 0;
+
+    /**
+     * Total unmatched skipped tests
+     *
+     * @var integer
+     */
+    public static $totalUnmatchedSkipped = 0;
+
+    /**
+     * Total unmatched other tests
+     *
+     * @var integer
+     */
+    public static $totalUnmatchedOther = 0;
+
+    /**
      * Retry count (default to 5)
      *
      * @var integer
@@ -331,6 +367,12 @@ class ZephyrIntegrationManager
         print("Total Zephyr Tests Updated:                 " . self::$totalUpdated . "\n");
         print("Total Zephyr Tests Matched:                 " . self::$totalMatched . "\n");
         print("Total Zephyr Tests Unmatched:               " . self::$totalUnmatched . "\n");
+        print("- - - - - - - - - - - - - - - - - - - - - - - - - -\n");
+        print("- Total Unmatched Skip:                     " . self::$totalUnmatchedSkipped . "\n");
+        print("- Total Unmatched MTF Inherited Skip:       " . self::$totalUnmatchedSkippedMtf . "\n");
+        print("- Total Unmatched Page Builder:             " . self::$totalUnmatchedPageBuilder . "\n");
+        print("- Total Unmatched PWA:                      " . self::$totalUnmatchedPwa . "\n");
+        print("- Total Unmatched Other:                    " . self::$totalUnmatchedOther . "\n");
         print("===================================================\n\n");
     }
 
