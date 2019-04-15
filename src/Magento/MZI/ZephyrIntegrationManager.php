@@ -128,7 +128,6 @@ class ZephyrIntegrationManager
      */
     public static $totalUnmatchedPwa = 0;
 
-
     /**
      * Total unmatched Page Builder zephyr tests
      *
@@ -261,12 +260,11 @@ class ZephyrIntegrationManager
         $zephyrComparison->matchOnIdOrName();
         $toBeCreatedTests = $zephyrComparison->getCreateArrayByName();
         $toBeUpdatedTests = $zephyrComparison->getUpdateArray();
-        $unmatchedTests = $zephyrComparison->getUnmatchedZephyrTests();
 
         CreateManager::getInstance()->performCreateOperations($toBeCreatedTests);
         UpdateManager::getInstance()->performUpdateOperations($toBeUpdatedTests);
-        UpdateManager::getInstance()->performCleanupOperations($unmatchedTests);
 
+        $zephyrComparison->printJqlForUnmatchedZephyrTests();
         $this->printStats();
         exit(0); // Done
     }
@@ -368,10 +366,10 @@ class ZephyrIntegrationManager
         print("Total Zephyr Tests Matched:                 " . self::$totalMatched . "\n");
         print("Total Zephyr Tests Unmatched:               " . self::$totalUnmatched . "\n");
         print("- - - - - - - - - - - - - - - - - - - - - - - - - -\n");
-        print("- Total Unmatched Skip:                     " . self::$totalUnmatchedSkipped . "\n");
-        print("- Total Unmatched MTF Inherited Skip:       " . self::$totalUnmatchedSkippedMtf . "\n");
         print("- Total Unmatched Page Builder:             " . self::$totalUnmatchedPageBuilder . "\n");
         print("- Total Unmatched PWA:                      " . self::$totalUnmatchedPwa . "\n");
+        print("- Total Unmatched Skip (MTF-TO-MFTF):       " . self::$totalUnmatchedSkippedMtf . "\n");
+        print("- Total Unmatched Skip:                     " . self::$totalUnmatchedSkipped . "\n");
         print("- Total Unmatched Other:                    " . self::$totalUnmatchedOther . "\n");
         print("===================================================\n\n");
     }

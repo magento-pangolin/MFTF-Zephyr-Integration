@@ -97,7 +97,7 @@ class CreateIssue
                 $logMessage .= "Created New Test $key In $time Seconds\n";
             } catch (JiraException $e) {
                 print("\nException Occurs In JIRA create(). " . $e->getMessage());
-                LoggingUtil::getInstance()->getLogger(CreateIssue::class)->info(
+                LoggingUtil::getInstance()->getLogger(CreateIssue::class)->warn(
                     "\nException Occurs In JIRA create(). " . $e->getMessage()
                 );
                 $success = false;

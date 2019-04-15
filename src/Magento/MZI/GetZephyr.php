@@ -141,7 +141,7 @@ class GetZephyr
             print("\nFinished collecting Zephyr Tests\n\n");
         } catch (JiraException $e) {
             print("JIRA Exception: " . $e->getMessage());
-            LoggingUtil::getInstance()->getLogger(UpdateIssue::class)->info(
+            LoggingUtil::getInstance()->getLogger(UpdateIssue::class)->warn(
                 "JIRA Exception: " . $e->getMessage()
             );
             print("\nException occurs in JIRA search(), exiting with code 1\n");

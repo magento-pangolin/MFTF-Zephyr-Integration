@@ -63,7 +63,7 @@ class TransitionIssue
                 }
             } catch (JiraException $e) {
                 print("\nException Occurs In JIRA transition(). " . $e->getMessage());
-                LoggingUtil::getInstance()->getLogger(TransitionIssue::class)->info(
+                LoggingUtil::getInstance()->getLogger(TransitionIssue::class)->warn(
                     "\nException Occurs In JIRA transition(). " . $e->getMessage()
                 );
                 $success = false;
@@ -96,7 +96,7 @@ class TransitionIssue
                         . " Tries, Still Getting JIRA Exception: "
                         . $e->getMessage()
                     );
-                    LoggingUtil::getInstance()->getLogger(TransitionIssue::class)->info(
+                    LoggingUtil::getInstance()->getLogger(TransitionIssue::class)->warn(
                         "While Processing "
                         . $logMessage
                         . "After "
@@ -149,7 +149,7 @@ class TransitionIssue
             }
         } catch (JiraException $e) {
             print("\nException Occurs In JIRA transition(). " . $e->getMessage());
-            LoggingUtil::getInstance()->getLogger(TransitionIssue::class)->info(
+            LoggingUtil::getInstance()->getLogger(TransitionIssue::class)->warn(
                 "\nException Occurs In JIRA transition(). " . $e->getMessage()
             );
             $success = false;
@@ -187,7 +187,7 @@ class TransitionIssue
                     . " Tries, Still Getting JIRA Exception: "
                     . $e->getMessage()
                 );
-                LoggingUtil::getInstance()->getLogger(TransitionIssue::class)->info(
+                LoggingUtil::getInstance()->getLogger(TransitionIssue::class)->warn(
                     "While Processing "
                     . $logMessage
                     . "After "
