@@ -243,39 +243,62 @@ class ZephyrComparison
         }
         $b = 'key in (';
         $e = ')';
-        print("\nJQLs for Unmatched Zephyr Tests:");
-        print("\n\nPage Builder:\n" . $b . implode(',', $keys[self::UNMATCHED_CATEGORY_PAGE_BUILDER]) . $e);
-        print("\n\nPWA:\n" . $b . implode(',', $keys[self::UNMATCHED_CATEGORY_PWA]) . $e);
-        print(
-            "\n\nMTF Inherited Skipped:\n"
-            . $b
-            . implode(',', $keys[self::UNMATCHED_CATEGORY_SKIPPED_MTF_TO_MFTF])
-            . $e
-        );
-        print("\n\nOther Skipped:\n" . $b . implode(',', $keys[self::UNMATCHED_CATEGORY_SKIPPED]) . $e);
-        print("\n\nOther:\n" . $b . implode(',', $keys[self::UNMATCHED_CATEGORY_OTHER]) . $e . "\n");
 
+        print("\nJQLs for Unmatched Zephyr Tests:");
         LoggingUtil::getInstance()->getLogger(ZephyrComparison::class)->info(
             "\nJQLs for Unmatched Zephyr Tests:"
         );
-        LoggingUtil::getInstance()->getLogger(ZephyrComparison::class)->info(
-            "\n\nPage Builder:\n" . $b . implode(',', $keys[self::UNMATCHED_CATEGORY_PAGE_BUILDER]) . $e
-        );
-        LoggingUtil::getInstance()->getLogger(ZephyrComparison::class)->info(
-            "\n\nPWA:\n" . $b . implode(',', $keys[self::UNMATCHED_CATEGORY_PWA]) . $e
-        );
-        LoggingUtil::getInstance()->getLogger(ZephyrComparison::class)->info(
-            "\n\nSkipped (MTF-To-MFTF):\n"
-            . $b
-            . implode(',', $keys[self::UNMATCHED_CATEGORY_SKIPPED_MTF_TO_MFTF])
-            . $e
-        );
-        LoggingUtil::getInstance()->getLogger(ZephyrComparison::class)->info(
-            "\n\nOther Skipped:\n" . $b . implode(',', $keys[self::UNMATCHED_CATEGORY_SKIPPED]) . $e
-        );
-        LoggingUtil::getInstance()->getLogger(ZephyrComparison::class)->info(
-            "\n\nOther:\n" . $b . implode(',', $keys[self::UNMATCHED_CATEGORY_OTHER]) . $e . "\n"
-        );
+
+        print("\n\nPage Builder:\n");
+        LoggingUtil::getInstance()->getLogger(ZephyrComparison::class)->info("\n\nPage Builder:\n");
+        if (isset($keys[self::UNMATCHED_CATEGORY_PAGE_BUILDER])) {
+            print($b . implode(',', $keys[self::UNMATCHED_CATEGORY_PAGE_BUILDER]) . $e);
+            LoggingUtil::getInstance()->getLogger(ZephyrComparison::class)->info(
+                $b . implode(',', $keys[self::UNMATCHED_CATEGORY_PAGE_BUILDER]) . $e
+            );
+        }
+
+        print("\n\nPWA:\n");
+        LoggingUtil::getInstance()->getLogger(ZephyrComparison::class)->info("\n\nPWA:\n");
+        if (isset($keys[self::UNMATCHED_CATEGORY_PWA])) {
+            print($b . implode(',', $keys[self::UNMATCHED_CATEGORY_PWA]) . $e);
+            LoggingUtil::getInstance()->getLogger(ZephyrComparison::class)->info(
+                $b . implode(',', $keys[self::UNMATCHED_CATEGORY_PWA]) . $e
+            );
+        }
+
+        print("\n\nMTF Inherited Skipped:\n");
+        LoggingUtil::getInstance()->getLogger(ZephyrComparison::class)->info("\n\nSkipped (MTF-To-MFTF):\n");
+        if (isset($keys[self::UNMATCHED_CATEGORY_SKIPPED_MTF_TO_MFTF])) {
+            print(
+                $b
+                . implode(',', $keys[self::UNMATCHED_CATEGORY_SKIPPED_MTF_TO_MFTF])
+                . $e
+            );
+            LoggingUtil::getInstance()->getLogger(ZephyrComparison::class)->info(
+                $b
+                . implode(',', $keys[self::UNMATCHED_CATEGORY_SKIPPED_MTF_TO_MFTF])
+                . $e
+            );
+        }
+
+        print("\n\nOther Skipped:\n");
+        LoggingUtil::getInstance()->getLogger(ZephyrComparison::class)->info("\n\nOther Skipped:\n");
+        if (isset($keys[self::UNMATCHED_CATEGORY_SKIPPED])) {
+            print($b . implode(',', $keys[self::UNMATCHED_CATEGORY_SKIPPED]) . $e);
+            LoggingUtil::getInstance()->getLogger(ZephyrComparison::class)->info(
+                $b . implode(',', $keys[self::UNMATCHED_CATEGORY_SKIPPED]) . $e
+            );
+        }
+
+        print("\n\nOther:\n");
+        LoggingUtil::getInstance()->getLogger(ZephyrComparison::class)->info("\n\nOther:\n");
+        if (isset($keys[self::UNMATCHED_CATEGORY_OTHER])) {
+            print($b . implode(',', $keys[self::UNMATCHED_CATEGORY_OTHER]) . $e . "\n");
+            LoggingUtil::getInstance()->getLogger(ZephyrComparison::class)->info(
+                $b . implode(',', $keys[self::UNMATCHED_CATEGORY_OTHER]) . $e . "\n"
+            );
+        }
     }
 
     /**
