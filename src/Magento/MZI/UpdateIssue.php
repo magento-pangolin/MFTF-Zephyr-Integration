@@ -125,16 +125,14 @@ class UpdateIssue
 
         // Transition issue status to "Skipped"
         $transitionExecutor = new TransitionIssue(null, null, __DIR__  . '/../../../');
-        if (isset($update['skip'])) {
-            if ($update['status'] != "Automated") {
-                $transitionExecutor->statusTransitionToAutomated($update['key'], $update['status']);
-            }
+        if (isset($update['skip']) && $update['status'] != "Skipped") {
+            $transitionExecutor->statusTransitionToAutomated($update['key'], $update['status']);
             $transitionExecutor->oneStepStatusTransition($update['key'], "Skipped");
             $this->skipTestLinkIssue($update);
         }
         // Transition issue status to "Automated"
-        if (isset($update['unskip'])) {
-            $transitionExecutor->oneStepStatusTransition($update['key'], "Automated");
+        if (isset($update['automate']) && $update['status'] != "Automated") {
+            $transitionExecutor->statusTransitionToAutomated($update['key'], $update['status']);
         }
     }
 
@@ -183,6 +181,13 @@ class UpdateIssue
             $issueField->addCustomField(JiraInfo::JIRA_FIELD_TEST_TYPE, ['value' => $update['test_type']]);
             $this->updatedFields .= "test type = " . $update['test_type'] . "\n";
         }
+
+        /* Not update release line ever
+        if (isset($update['release_line'])) {
+            $issueField->addCustomField(JiraInfo::JIRA_FIELD_RELEASE_LINE, ['value' => $update['release_line']]);
+            $this->updatedFields .= "release line = " . $update['release_line'] . "\n";
+        }
+        */
 
         foreach ($update['labels'] as $label) {
             $issueField->addLabel($label);

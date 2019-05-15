@@ -5,6 +5,8 @@
  */
 namespace Magento\MZI;
 
+use Magento\MZI\Util\JiraInfo;
+
 /**
  *Purpose of Manager
  * 1. call GetZephyrTest and store resulting json
@@ -18,29 +20,6 @@ namespace Magento\MZI;
 class ZephyrIntegrationManager
 {
     /**
-     * Valid release lines
-     *
-     * @var array
-     */
-    public static $validReleaseLines = [
-        '2.0.x',
-        '2.1.x',
-        '2.2.x',
-        '2.3.x',
-        '2.4.x',
-    ];
-
-    /**
-     * Valid page builder release lines
-     *
-     * @var array
-     */
-    public static $validPbReleaseLines = [
-        'PB1.0.x',
-        'PB2.0.x',
-    ];
-
-    /**
      * Release line
      *
      * @var string
@@ -53,17 +32,6 @@ class ZephyrIntegrationManager
      * @var string
      */
     public static $pbReleaseLine;
-
-    /**
-     * Valid project keys
-     *
-     * @var array
-     */
-    public static $validProjectKeys = [
-        'MC',
-        'MCTEST',
-        'MAGETWO',
-    ];
 
     /**
      * Project key
@@ -115,6 +83,13 @@ class ZephyrIntegrationManager
     public static $totalMatched = 0;
 
     /**
+     * Total same mftf and zephyr / no change
+     *
+     * @var integer
+     */
+    public static $totalSame = 0;
+
+    /**
      * Total unmatched zephyr tests
      *
      * @var integer
@@ -155,6 +130,27 @@ class ZephyrIntegrationManager
      * @var integer
      */
     public static $totalUnmatchedOther = 0;
+
+    /**
+     * Total mftf tests that matches more than one zephyr tests
+     *
+     * @var integer
+     */
+    public static $totalMtoZDuplicate = 0;
+
+    /**
+     * Total zephyr tests that matches more than one mftf tests
+     *
+     * @var integer
+     */
+    public static $totalZtoMDuplicate = 0;
+
+    /**
+     * Total mftf tests that are not processed due to missing title
+     *
+     * @var integer
+     */
+    public static $totalUnprocessed = 0;
 
     /**
      * Retry count (default to 5)
@@ -253,12 +249,16 @@ class ZephyrIntegrationManager
             exit(1);
         }
 
-        $zephyrTests = GetZephyr::getInstance()->getTestsByProject(self::$project);
+        $zephyrTests = GetZephyr::getInstance()->getTestsByProject(
+            self::$project,
+            self::$releaseLine,
+            self::$pbReleaseLine
+        );
         $mftfTests = ParseMFTF::getInstance()->getTestObjects();
 
         $zephyrComparison = new ZephyrComparison($mftfTests, $zephyrTests);
         $zephyrComparison->matchOnIdOrName();
-        $toBeCreatedTests = $zephyrComparison->getCreateArrayByName();
+        $toBeCreatedTests = $zephyrComparison->getCreateArray();
         $toBeUpdatedTests = $zephyrComparison->getUpdateArray();
 
         CreateManager::getInstance()->performCreateOperations($toBeCreatedTests);
@@ -309,7 +309,7 @@ class ZephyrIntegrationManager
         $outStr = substr($inStr, 0, 2);
         $remainStr = substr($inStr, 2);
         $outStr .= strtolower($remainStr);
-        if (in_array($outStr, self::$validReleaseLines)) {
+        if (in_array($outStr, JiraInfo::$validReleaseLines)) {
             self::$releaseLine = $outStr;
             return true;
         } else {
@@ -328,7 +328,7 @@ class ZephyrIntegrationManager
         $outStr = substr($inStr, 0, 2);
         $remainStr = substr($inStr, 2);
         $outStr .= strtolower($remainStr);
-        if (in_array($outStr, self::$validPbReleaseLines)) {
+        if (in_array($outStr, JiraInfo::$validPbReleaseLines)) {
             self::$pbReleaseLine = $outStr;
             return true;
         } else {
@@ -344,7 +344,7 @@ class ZephyrIntegrationManager
      */
     private function validateProject($key)
     {
-        if (in_array($key, self::$validProjectKeys)) {
+        if (in_array($key, JiraInfo::$validProjectKeys)) {
             self::$project = $key;
             return true;
         }
@@ -363,8 +363,12 @@ class ZephyrIntegrationManager
         print("---------------------------------------------------\n");
         print("Total Zephyr Tests Created:                 " . self::$totalCreated . "\n");
         print("Total Zephyr Tests Updated:                 " . self::$totalUpdated . "\n");
-        print("Total Zephyr Tests Matched:                 " . self::$totalMatched . "\n");
+        print("Total Zephyr Tests Same As MFTF:            " . self::$totalSame . "\n");
         print("Total Zephyr Tests Unmatched:               " . self::$totalUnmatched . "\n");
+        print("Total 1 Zephyr <-> 1 MFTF Matched:          " . self::$totalMatched . "\n");
+        print("Total 1 Zephyr  -> x MFTF Matched:          " . self::$totalZtoMDuplicate . "\n");
+        print("Total 1 MFTF    -> x Zephyr Matched:        " . self::$totalMtoZDuplicate . "\n");
+        print("Total MFTF Tests Unprocessed/No Title:      " . self::$totalUnprocessed . "\n");
         print("- - - - - - - - - - - - - - - - - - - - - - - - - -\n");
         print("- Total Unmatched Page Builder:             " . self::$totalUnmatchedPageBuilder . "\n");
         print("- Total Unmatched PWA:                      " . self::$totalUnmatchedPwa . "\n");

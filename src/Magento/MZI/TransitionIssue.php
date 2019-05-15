@@ -31,7 +31,11 @@ class TransitionIssue
         $startingStatus = $status;
 
         $currentStatusOffset = array_search($startingStatus, JiraInfo::$transitionStates);
-        $requiredTransitions = array_slice(JiraInfo::$transitionStates, $currentStatusOffset+1);
+        if ($currentStatusOffset === false) {
+            $requiredTransitions = JiraInfo::$transitionStates;
+        } else {
+            $requiredTransitions = array_slice(JiraInfo::$transitionStates, $currentStatusOffset+1);
+        }
 
         foreach ($requiredTransitions as $status) {
             $logMessage = "\nSetting " . $issueKey . " To " . $status . "\n";

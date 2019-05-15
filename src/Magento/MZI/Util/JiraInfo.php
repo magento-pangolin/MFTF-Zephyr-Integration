@@ -31,6 +31,9 @@ class JiraInfo
      * Jira test type for mftf
      */
     const JIRA_TEST_TYPE_MFTF = "MFTF Test";
+    const JIRA_TEST_TYPE_MTF = "MTF Test";
+    const JIRA_TEST_TYPE_API = "API Functional Test";
+    const JIRA_TEST_TYPE_INTEGRATION = "Integration Test";
 
     /**
      * Jira labels
@@ -39,10 +42,44 @@ class JiraInfo
     const JIRA_LABEL_PWA = "PWA";
 
     /**
+     * Valid release lines
+     *
+     * @var array
+     */
+    public static $validReleaseLines = [
+        '2.0.x',
+        '2.1.x',
+        '2.2.x',
+        '2.3.x',
+        '2.4.x',
+    ];
+
+    /**
+     * Valid page builder release lines
+     *
+     * @var array
+     */
+    public static $validPbReleaseLines = [
+        'PB1.0.x',
+        'PB2.0.x',
+    ];
+
+    /**
+     * Valid project keys
+     *
+     * @var array
+     */
+    public static $validProjectKeys = [
+        'MC',
+        'MCTEST',
+        'MAGETWO',
+    ];
+
+    /**
      * List of all transitions from Open to Automated. Skip transition handled separately
      */
     public static $transitionStates = [
-        "Open", "In Progress", "Ready for Review", "In Review", "Review Passed", "Automated"
+        "Automation Blocked", "In Progress", "Ready for Review", "In Review", "Review Passed", "Automated"
     ];
 
     /**

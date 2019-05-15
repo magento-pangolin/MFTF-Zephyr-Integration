@@ -15,6 +15,18 @@ use Magento\MZI\CreateManager;
 
 class LoggingUtil
 {
+    // mftf logs
+    const LOG_TYPE_MFTF = "mftf";
+    const LOG_TYPE_CREATED = "create"; // mftf_name
+    const LOG_TYPE_UPDATED = "update"; // mftf_name, zephyr_key
+    const LOG_TYPE_SAME = "same"; // mftf_name, zephyr_key
+    const LOG_TYPE_UNPROCESSED = "notitle"; // mftf_name
+    const LOG_TYPE_MATCHED = "unimatch"; // mftf_name, zephyr_key
+    const LOG_TYPE_ONE_M_TO_MANY_Z = "one_m_many_z"; // mftf_name, zephyr_key, zephyr_key...
+    // zephyr logs
+    const LOG_TYPE_ONE_Z_TO_MANY_M = "one_z_many_m"; // zephyr_key, mftf_name, mftf_name...
+    const LOG_TYPE_UNMATCHED = "unmatch"; // zephyr_key
+
     /**
      * Private Map of Logger instances, indexed by Class Name.
      *
@@ -82,9 +94,26 @@ class LoggingUtil
     {
         if (($clazz == UpdateIssue::class) || ($clazz == UpdateManager::class)) {
             return "log/updateIssue.log";
-        }
-        elseif (($clazz == CreateIssue::class) || ($clazz == CreateManager::class)) {
+        } elseif (($clazz == CreateIssue::class) || ($clazz == CreateManager::class)) {
             return "log/createIssue.log";
+        } elseif ($clazz == self::LOG_TYPE_MATCHED) {
+            return  "log/matched.log";
+        } elseif ($clazz == self::LOG_TYPE_UNMATCHED) {
+            return  "log/unmatched.log";
+        } elseif ($clazz == self::LOG_TYPE_CREATED) {
+            return  "log/created.log";
+        } elseif ($clazz == self::LOG_TYPE_UPDATED) {
+            return  "log/updated.log";
+        } elseif ($clazz == self::LOG_TYPE_UNPROCESSED) {
+            return  "log/unprocessed.log";
+        } elseif ($clazz == self::LOG_TYPE_MFTF) {
+            return  "log/mftf.log";
+        } elseif ($clazz == self::LOG_TYPE_SAME) {
+            return  "log/same.log";
+        } elseif ($clazz == self::LOG_TYPE_ONE_M_TO_MANY_Z) {
+            return  "log/m_to_z_duplicates.log";
+        } elseif ($clazz == self::LOG_TYPE_ONE_Z_TO_MANY_M) {
+            return  "log/z_to_m_duplicates.log";
         } else {
             return "log/mzi.log";
         }

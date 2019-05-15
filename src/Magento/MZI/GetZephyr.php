@@ -57,13 +57,19 @@ class GetZephyr
     /**
      * Gets tests from project key
      * @param string $projectKey
+     * @param string $releaseLine
+     * @param string $pbReleaseLine
      *
      * @return array
      * @throws \Exception
      */
-    public function getTestsByProject($projectKey = 'MC')
+    public function getTestsByProject($projectKey, $releaseLine, $pbReleaseLine)
     {
-        $jql = "project = $projectKey AND issueType = Test AND status in (Automated, Skipped) ORDER BY key ASC";
+        $jql = "project = $projectKey ";
+        $jql .= "AND issuetype = Test ";
+        $jql .= "AND \"Test Type\" not in (\"API Functional Test\", \"Integration Test\",\"MTF Test\") ";
+        $jql .= "AND \"Release Line\" in ($releaseLine, $pbReleaseLine) ";
+        $jql .= "ORDER BY key ASC";
         return $this->jqlPagination($jql);
     }
 
