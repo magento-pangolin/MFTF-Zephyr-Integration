@@ -18,6 +18,7 @@ class ZephyrComparison
     const UNMATCHED_CATEGORY_SKIPPED_MTF_TO_MFTF = 'skip_mtf_to_mftf';
     const UNMATCHED_CATEGORY_SKIPPED = 'skip';
     const UNMATCHED_CATEGORY_OTHER = 'other';
+
     /**
      * Chars to be trimmed
      */
@@ -444,8 +445,9 @@ class ZephyrComparison
                         || ($this->zephyrTests[$subKey][JiraInfo::JIRA_FIELD_TEST_TYPE]['value'] != JiraInfo::JIRA_TEST_TYPE_MTF
                             && $this->zephyrTests[$subKey][JiraInfo::JIRA_FIELD_TEST_TYPE]['value'] != JiraInfo::JIRA_TEST_TYPE_INTEGRATION
                             && $this->zephyrTests[$subKey][JiraInfo::JIRA_FIELD_TEST_TYPE]['value'] != JiraInfo::JIRA_TEST_TYPE_API))
+                    /* This has to be commented because of MQE-1385
                     && (!isset($this->zephyrTests[$subKey][JiraInfo::JIRA_FIELD_RELEASE_LINE])
-                        || $this->zephyrTests[$subKey][JiraInfo::JIRA_FIELD_RELEASE_LINE]['value'] == $mftfTest['releaseLine'][0])) {
+                        || $this->zephyrTests[$subKey][JiraInfo::JIRA_FIELD_RELEASE_LINE]['value'] == $mftfTest['releaseLine'][0])*/) {
                     $matches1[] = $subKey;
                 }
             }
@@ -770,6 +772,7 @@ class ZephyrComparison
      */
     private function isPageBuilderMftfTest($mftfTest)
     {
+        // This is not entirely reliable until MQE-1385 is fixed, and it will indirectly affect release line value
         if (isset($mftfTest['features'])) {
             $feature = strtolower($mftfTest['features'][0]);
             if (strpos('pagebuilder', $feature) !== false) {

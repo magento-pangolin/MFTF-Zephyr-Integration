@@ -67,7 +67,9 @@ class GetZephyr
     {
         $jql = "project = $projectKey ";
         $jql .= "AND issuetype = Test ";
-        $jql .= "AND \"Test Type\" not in (\"API Functional Test\", \"Integration Test\",\"MTF Test\") ";
+        $jql .= "AND status != Closed ";
+        $jql .= "AND \"Test Type\" not in (\"API Functional Test\", \"Integration Test\", \"MTF Test\", ";
+        $jql .= "\"Jasmine Test\", \"Performance Test\", \"Static Test\") ";
         $jql .= "AND \"Release Line\" in ($releaseLine, $pbReleaseLine) ";
         $jql .= "ORDER BY key ASC";
         return $this->jqlPagination($jql);
