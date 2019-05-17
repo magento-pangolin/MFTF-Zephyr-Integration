@@ -26,16 +26,6 @@ class UpdateIssue
     const UPDATE_LABEL = 'mzi_updated';
 
     /**
-     * Note for test update
-     */
-    const NOTE_FOR_UPDATE = "\nUpdated by mftf zephyr integration from test: ";
-
-    /**
-     * Label for no match issue
-     */
-    const NO_MATCH_LABEL = 'mzi_no_match';
-
-    /**
      * Updated fields as a concatenated string
      *
      * @var string
@@ -153,18 +143,17 @@ class UpdateIssue
         }
 
         if (isset($update['description'])) {
-            $issueField->setDescription(
-                $update['description']
-                . self::NOTE_FOR_UPDATE
+            $description = $update['description']
+                . "\n\n"
+                . ZephyrComparison::SYNC_TEST_NAME_DELIMITER
                 . $update['mftf_test_name']
-                . "\n"
-            );
-            $this->updatedFields .=
-                "description = "
-                . $update['description']
-                . self::NOTE_FOR_UPDATE
-                . $update['mftf_test_name']
+                . "*\n"
+                . ZephyrComparison::SYNC_END_DELIMITER
+                . "\n\n"
+                . $update['sticky_description']
                 . "\n";
+            $issueField->setDescription($description);
+            $this->updatedFields .= "description = " . $description;
         }
 
         if (isset($update['stories']) && !empty($update['stories'])) {

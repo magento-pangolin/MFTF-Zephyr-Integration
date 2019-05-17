@@ -19,11 +19,6 @@ class CreateIssue
     const CREATE_LABEL = 'mzi_created';
 
     /**
-     * Note for test creation
-     */
-    const NOTE_FOR_CREATE = "\nCreated by mftf zephyr integration from test: ";
-
-    /**
      * Test containing all information for issue to be created from MFTF annotations
      *
      * @var array
@@ -70,7 +65,15 @@ class CreateIssue
         $issueField->setProjectKey(ZephyrIntegrationManager::$project);
         $issueField->setSummary($test['title'][0]);
         $issueField->setIssueType('Test');
-        $issueField->setDescription($test['description'][0] . self::NOTE_FOR_CREATE . $testName . "\n");
+        $issueField->setDescription(
+            $test['description'][0]
+            . "\n\n"
+            . ZephyrComparison::SYNC_TEST_NAME_DELIMITER
+            . $testName
+            . "*\n"
+            . ZephyrComparison::SYNC_END_DELIMITER
+            . "\n"
+        );
         $issueField->addComponents($this->getZephyrComponentName($test['features'][0]));
 
         if (isset($test['stories'])) {

@@ -25,6 +25,12 @@ class ZephyrComparison
     const TRIMMED_CHARS = " \t\n\r\0\x0B.;";
 
     /**
+     * Delimiters to be used in Zephyr Description
+     */
+    const SYNC_END_DELIMITER = "*=== MFTF ZEPHYR SYNC END ===*";
+    const SYNC_TEST_NAME_DELIMITER = "*Mftf Test: ";
+
+    /**
      * array of MFTF tests from ParseMFTF class
      *
      * @var array
@@ -535,22 +541,31 @@ class ZephyrComparison
             $logMessage .= "Title comparison failed:\nmftf=" . $mftf . "\nzephyr=\n";
         }
 
+        $description = '';
+        $stickyDescription = '';
         if (isset($zephyrTest['description'])) {
-            $parts = explode(CreateIssue::NOTE_FOR_CREATE, $zephyrTest['description']);
-            $zephyrTest['description'] = isset($parts[0]) ? $parts[0] : $zephyrTest['description'];
-            $parts = explode(UpdateIssue::NOTE_FOR_UPDATE, $zephyrTest['description']);
-            $zephyrTest['description'] = isset($parts[0]) ? $parts[0] : $zephyrTest['description'];
+            $parts1 = explode(self::SYNC_END_DELIMITER, $zephyrTest['description'], 2);
+            if (count($parts1) == 2) {
+                $stickyDescription = trim($parts1[1]);
+                $parts2 = explode(self::SYNC_TEST_NAME_DELIMITER, $parts1[0], 2);
+                $description = trim($parts2[0]);
+            } else {
+                $description = trim($zephyrTest['description']);
+                $stickyDescription = trim($zephyrTest['description']);
+            }
         }
-        if (isset($mftfTest['description']) && isset($zephyrTest['description'])) {
-            $mftf = trim($mftfTest['description'][0], self::TRIMMED_CHARS);
-            $zephyr = trim($zephyrTest['description'], self::TRIMMED_CHARS);
+        if (isset($mftfTest['description']) && !empty($description)) {
+            $mftf = trim($mftfTest['description'][0]);
+            $zephyr = $description;
             if (strcasecmp($mftf, $zephyr) != 0) {
                 $this->mismatches[$key]['description'] = $mftf;
+                $this->mismatches[$key]['sticky_description'] = $stickyDescription;
                 $logMessage .= "Description comparison failed:\nmftf=" . $mftf . "\nzephyr=" . $zephyr . "\n";
             }
-        } elseif (isset($mftfTest['description']) && !empty(trim($mftfTest['description'][0], self::TRIMMED_CHARS))) {
-            $mftf = trim($mftfTest['description'][0], self::TRIMMED_CHARS);
+        } elseif (isset($mftfTest['description']) && !empty(trim($mftfTest['description'][0]))) {
+            $mftf = trim($mftfTest['description'][0]);
             $this->mismatches[$key]['description'] = $mftf;
+            $this->mismatches[$key]['sticky_description'] = '';
             $logMessage .= "Description comparison failed:\nmftf=" . $mftf . "\nzephyr=\n";
         }
 
@@ -618,7 +633,8 @@ class ZephyrComparison
         if (isset($this->mismatches[$key])) {
             // Save description as we will always update it
             if (!isset($this->mismatches[$key]['description'])) {
-                $this->mismatches[$key]['description'] = trim($mftfTest['description'][0], self::TRIMMED_CHARS);
+                $this->mismatches[$key]['description'] = $description;
+                $this->mismatches[$key]['sticky_description'] = $stickyDescription;
             }
             $this->mismatches[$key]['mftf_test_name'] = $mftfTestName; // Save mftf test name
             $this->mismatches[$key]['status'] = $zephyrTest['status']['name']; // Save current Zephyr status
