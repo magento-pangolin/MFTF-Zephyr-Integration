@@ -61,6 +61,7 @@ class JiraInfo
      */
     public static $validPbReleaseLines = [
         'PB1.0.x',
+        'PB1.1.x',
         'PB2.0.x',
     ];
 

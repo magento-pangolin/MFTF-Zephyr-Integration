@@ -244,17 +244,16 @@ class ZephyrIntegrationManager
         }
 
         if (!$this->validatePbReleaseLine($pbReleaseLine)) {
-            print("\nInvalid command option: \"--pbReleaseLine\"\n");
-            $this->printUsage();
-            exit(1);
+            print("\nSkipping Page Builder Synchronization\n");
         }
+
+        $mftfTests = ParseMFTF::getInstance()->getTestObjects();
 
         $zephyrTests = GetZephyr::getInstance()->getTestsByProject(
             self::$project,
             self::$releaseLine,
             self::$pbReleaseLine
         );
-        $mftfTests = ParseMFTF::getInstance()->getTestObjects();
 
         $zephyrComparison = new ZephyrComparison($mftfTests, $zephyrTests);
         $zephyrComparison->matchOnIdOrName();
@@ -313,6 +312,7 @@ class ZephyrIntegrationManager
             self::$releaseLine = $outStr;
             return true;
         } else {
+            self::$releaseLine = null;
             return false;
         }
     }

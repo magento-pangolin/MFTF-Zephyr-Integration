@@ -70,8 +70,11 @@ class GetZephyr
         $jql .= "AND status != Closed ";
         $jql .= "AND \"Test Type\" not in (\"API Functional Test\", \"Integration Test\", \"MTF Test\", ";
         $jql .= "\"Jasmine Test\", \"Performance Test\", \"Static Test\") ";
-        $jql .= "AND \"Release Line\" in ($releaseLine, $pbReleaseLine) ";
-        $jql .= "ORDER BY key ASC";
+        $jql .= "AND \"Release Line\" in ($releaseLine";
+        if (!empty($pbReleaseLine)) {
+            $jql .= ", $pbReleaseLine";
+        }
+        $jql .= ") ORDER BY key ASC";
         return $this->jqlPagination($jql);
     }
 

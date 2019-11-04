@@ -68,9 +68,6 @@ class CreateIssue
         $issueField->setDescription(
             $test['description'][0]
             . "\n\n"
-            . ZephyrComparison::SYNC_TEST_NAME_DELIMITER
-            . $testName
-            . "*\n"
             . ZephyrComparison::SYNC_END_DELIMITER
             . "\n"
         );

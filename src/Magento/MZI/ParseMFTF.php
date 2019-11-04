@@ -115,6 +115,11 @@ class ParseMFTF
      */
     public static function getInstance()
     {
+        if (null === ZephyrIntegrationManager::$pbReleaseLine) {
+            self::$flags['pb'] = 1;
+            self::$flags['pbee'] = 1;
+        }
+
         if (self::$instance === null) {
             self::$instance = new ParseMFTF();
         }
@@ -143,6 +148,9 @@ class ParseMFTF
                 // Missing metadata are reported by Mftf.
                 $missingMetadata[$key] = $annotation;
             }
+
+            $annotations[$key]['description'][0] = $this->formatDescriptionAnnotation($annotation['description'][0]);
+
             if (isset($annotation['title'])) {
                 $annotations[$key]['title'][0] = trim(
                     substr($annotation['title'][0], strpos($annotation['title'][0], ":") + 1)
@@ -266,5 +274,20 @@ class ParseMFTF
             }
         }
         return $out;
+    }
+
+    /**
+     * Format description annotation
+     *
+     * @param string $description
+     * @return string
+     */
+    private function formatDescriptionAnnotation($description)
+    {
+        $outDescription = trim($description);
+        $outDescription = str_replace('<br><br><b><font size=+0.9>', "\n\n*", $outDescription);
+        $outDescription = str_replace('</font></b><br><br>', "*\n", $outDescription);
+        $outDescription = trim(str_replace('<br>', '', $outDescription));
+        return $outDescription;
     }
 }

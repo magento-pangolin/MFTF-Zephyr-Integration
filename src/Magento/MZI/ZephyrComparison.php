@@ -221,7 +221,7 @@ class ZephyrComparison
     {
         $keys = [];
         foreach ($this->unmatches as $key => $test) {
-            if ($this->isPageBuilderZephyrTest($test)) {
+            if (null !== ZephyrIntegrationManager::$pbReleaseLine && $this->isPageBuilderZephyrTest($test)) {
                 $keys[self::UNMATCHED_CATEGORY_PAGE_BUILDER][] = $key;
             } elseif ((isset($test[JiraInfo::JIRA_FIELD_GROUP]) && $test[JiraInfo::JIRA_FIELD_GROUP]['value'] == 'PWA')
                 || in_array(JiraInfo::JIRA_LABEL_PWA, $test['labels'])) {
@@ -631,11 +631,6 @@ class ZephyrComparison
         */
 
         if (isset($this->mismatches[$key])) {
-            // Save description as we will always update it
-            if (!isset($this->mismatches[$key]['description'])) {
-                $this->mismatches[$key]['description'] = $description;
-                $this->mismatches[$key]['sticky_description'] = $stickyDescription;
-            }
             $this->mismatches[$key]['mftf_test_name'] = $mftfTestName; // Save mftf test name
             $this->mismatches[$key]['status'] = $zephyrTest['status']['name']; // Save current Zephyr status
             $this->mismatches[$key]['labels'] = $zephyrTest['labels']; // Save current zephyr labels
@@ -689,7 +684,8 @@ class ZephyrComparison
             } elseif ($test[JiraInfo::JIRA_FIELD_TEST_TYPE]['value'] == JiraInfo::JIRA_TEST_TYPE_MFTF
                 && isset($test[JiraInfo::JIRA_FIELD_RELEASE_LINE]['value'])
                 && ($test[JiraInfo::JIRA_FIELD_RELEASE_LINE]['value'] == ZephyrIntegrationManager::$releaseLine
-                    || $test[JiraInfo::JIRA_FIELD_RELEASE_LINE]['value'] == ZephyrIntegrationManager::$pbReleaseLine)
+                    || (null !== ZephyrIntegrationManager::$pbReleaseLine
+                        && $test[JiraInfo::JIRA_FIELD_RELEASE_LINE]['value'] == ZephyrIntegrationManager::$pbReleaseLine))
                 && ($test['status']['name'] == 'Automated' || $test['status']['name'] == 'Skipped')
 
             ) {
@@ -727,7 +723,7 @@ class ZephyrComparison
         ZephyrIntegrationManager::$totalSame = 0;
 
         foreach ($this->unmatches as $key => $test) {
-            if ($this->isPageBuilderZephyrTest($test)) {
+            if (null !== ZephyrIntegrationManager::$pbReleaseLine && $this->isPageBuilderZephyrTest($test)) {
                 ZephyrIntegrationManager::$totalUnmatchedPageBuilder += 1;
             } elseif ((isset($test[JiraInfo::JIRA_FIELD_GROUP]) && $test[JiraInfo::JIRA_FIELD_GROUP]['value'] == 'PWA')
                 || in_array(JiraInfo::JIRA_LABEL_PWA, $test['labels'])) {

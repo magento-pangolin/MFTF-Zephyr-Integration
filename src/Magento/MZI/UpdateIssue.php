@@ -145,9 +145,6 @@ class UpdateIssue
         if (isset($update['description'])) {
             $description = $update['description']
                 . "\n\n"
-                . ZephyrComparison::SYNC_TEST_NAME_DELIMITER
-                . $update['mftf_test_name']
-                . "*\n"
                 . ZephyrComparison::SYNC_END_DELIMITER
                 . "\n\n"
                 . $update['sticky_description']
